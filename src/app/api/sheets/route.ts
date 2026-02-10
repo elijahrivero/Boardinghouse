@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import type { TenantBalance, TenantPaymentStatus } from "@/types";
 
+// TenantBalance requires payments array - Sheets has no per-payment data
+
 function parsePaymentStatus(s: string): TenantPaymentStatus {
   const lower = (s || "").toLowerCase();
   if (lower.includes("paid")) return "paid";
