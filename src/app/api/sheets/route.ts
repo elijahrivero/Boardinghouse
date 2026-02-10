@@ -55,6 +55,7 @@ export async function GET(request: Request) {
         amountPaid,
         remainingBalance: Math.max(0, remainingBalance),
         status: computedStatus,
+        payments: [], // Sheets has no per-payment breakdown
       };
     });
     return NextResponse.json(tenants);
