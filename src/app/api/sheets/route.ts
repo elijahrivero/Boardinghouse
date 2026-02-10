@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import type { TenantBalance, TenantPaymentStatus } from "@/types";
 
-// TenantBalance requires payments array - Sheets has no per-payment data
-
 function parsePaymentStatus(s: string): TenantPaymentStatus {
   const lower = (s || "").toLowerCase();
   if (lower.includes("paid")) return "paid";
@@ -36,7 +34,7 @@ export async function GET(request: Request) {
     });
 
     const rows = res.data.values || [];
-    const tenants: TenantBalance[] = rows.map((row, i) => {
+    const tenants: TenantBalance[] = rows.map((row, i): TenantBalance => {
       const monthlyRent = Number(row[3] ?? 0) || 0;
       const amountPaid = Number(row[4] ?? 0) || 0;
       const rawBalance = Number(row[5]);
@@ -48,7 +46,7 @@ export async function GET(request: Request) {
           : statusStr
             ? parsePaymentStatus(statusStr)
             : "due_soon";
-      return {
+      const tenant: TenantBalance = {
         id: `t-${i}`,
         tenantName: String(row[0] ?? ""),
         roomNumber: String(row[1] ?? ""),
@@ -57,8 +55,9 @@ export async function GET(request: Request) {
         amountPaid,
         remainingBalance: Math.max(0, remainingBalance),
         status: computedStatus,
-        payments: [], // Sheets has no per-payment breakdown
+        payments: [],
       };
+      return tenant;
     });
     return NextResponse.json(tenants);
   } catch (error) {
