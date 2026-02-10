@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import type { TenantBalance, Parcel, TenantPaymentStatus, ParcelStatus } from "@/types";
+import type { TenantBalance, TenantPaymentStatus } from "@/types";
 
 function parsePaymentStatus(s: string): TenantPaymentStatus {
   const lower = (s || "").toLowerCase();
@@ -10,18 +10,7 @@ function parsePaymentStatus(s: string): TenantPaymentStatus {
   return "due_soon";
 }
 
-function parseParcelStatus(s: string): ParcelStatus {
-  const lower = (s || "").toLowerCase();
-  if (lower.includes("claimed")) return "claimed";
-  if (lower.includes("arrived")) return "arrived";
-  if (lower.includes("incoming")) return "incoming";
-  return "incoming";
-}
-
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type"); // "tenants" | "parcels"
-
   const credentials = process.env.GOOGLE_SHEETS_CREDENTIALS;
   const sheetId = process.env.GOOGLE_SHEET_ID;
 
@@ -39,31 +28,24 @@ export async function GET(request: Request) {
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
     const sheets = google.sheets({ version: "v4", auth });
-    const range = type === "parcels" ? "Parcels!A2:D" : "TenantBalance!A2:H";
-
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range,
+      range: "TenantBalance!A2:H",
     });
 
     const rows = res.data.values || [];
-
-    if (type === "parcels") {
-      const parcels: Parcel[] = rows.map((row, i) => ({
-        id: `p-${i}`,
-        tenantName: String(row[0] ?? ""),
-        roomNumber: String(row[1] ?? ""),
-        status: parseParcelStatus(String(row[2] ?? "incoming")),
-      }));
-      return NextResponse.json(parcels);
-    }
-
     const tenants: TenantBalance[] = rows.map((row, i) => {
       const monthlyRent = Number(row[3] ?? 0) || 0;
       const amountPaid = Number(row[4] ?? 0) || 0;
       const rawBalance = Number(row[5]);
       const remainingBalance = !isNaN(rawBalance) ? rawBalance : Math.max(0, monthlyRent - amountPaid);
-      const statusStr = String(row[6] ?? "due_soon");
+      const statusStr = String(row[6] ?? "").trim();
+      const computedStatus: TenantPaymentStatus =
+        remainingBalance <= 0
+          ? "paid"
+          : statusStr
+            ? parsePaymentStatus(statusStr)
+            : "due_soon";
       return {
         id: `t-${i}`,
         tenantName: String(row[0] ?? ""),
@@ -71,8 +53,8 @@ export async function GET(request: Request) {
         bedNumber: String(row[2] ?? ""),
         monthlyRent,
         amountPaid,
-        remainingBalance: remainingBalance > 0 ? remainingBalance : 0,
-        status: parsePaymentStatus(statusStr),
+        remainingBalance: Math.max(0, remainingBalance),
+        status: computedStatus,
       };
     });
     return NextResponse.json(tenants);
