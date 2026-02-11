@@ -293,11 +293,18 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
 
   useEffect(() => {
     if (!hasFirebase) {
-      const data = loadBedsFromStorage();
-      setBeds(data);
-      setTenants(bedsToTenants(data));
+      const load = () => {
+        const data = loadBedsFromStorage();
+        setBeds(data);
+        setTenants(bedsToTenants(data));
+      };
+      load();
       setLoading(false);
-      return;
+      const onStorage = (e: StorageEvent) => {
+        if (e.key === STORAGE_KEY) load();
+      };
+      window.addEventListener("storage", onStorage);
+      return () => window.removeEventListener("storage", onStorage);
     }
     const unsubscribe = onSnapshot(
       collection(db, "beds"),

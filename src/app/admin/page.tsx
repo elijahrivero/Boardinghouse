@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import BedSpaceList from "@/components/BedSpaceList";
 import TenantBalanceList from "@/components/TenantBalanceList";
 import Link from "next/link";
+import { notifyAuthChanged } from "@/hooks/useAdminAuth";
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
@@ -34,6 +35,7 @@ export default function AdminPage() {
       if (data.ok) {
         setAuthenticated(true);
         setPassword("");
+        notifyAuthChanged(); // Tell other tabs to refresh auth state
       } else {
         setError(data.error || "Login failed");
       }
@@ -47,6 +49,7 @@ export default function AdminPage() {
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     setAuthenticated(false);
+    notifyAuthChanged(); // Tell other tabs to refresh auth state
   };
 
   if (authenticated === null) {

@@ -80,7 +80,7 @@ interface BedSpaceListProps {
   canEdit?: boolean;
 }
 
-export default function BedSpaceList({ canEdit = true }: BedSpaceListProps) {
+export default function BedSpaceList({ canEdit = false }: BedSpaceListProps) {
   const [beds, setBeds] = useState<BedSpace[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,9 +93,14 @@ export default function BedSpaceList({ canEdit = true }: BedSpaceListProps) {
 
   useEffect(() => {
     if (!hasFirebase) {
-      setBeds(loadBedsFromStorage());
+      const load = () => setBeds(loadBedsFromStorage());
+      load();
       setLoading(false);
-      return;
+      const onStorage = (e: StorageEvent) => {
+        if (e.key === STORAGE_KEY) load();
+      };
+      window.addEventListener("storage", onStorage);
+      return () => window.removeEventListener("storage", onStorage);
     }
     const unsubscribe = onSnapshot(
       collection(db, "beds"),
@@ -323,7 +328,7 @@ export default function BedSpaceList({ canEdit = true }: BedSpaceListProps) {
           onSave={handleSave}
           onDelete={handleDelete}
           saving={saving}
-          canEdit
+          canEdit={canEdit}
         />
       )}
     </div>

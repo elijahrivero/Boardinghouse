@@ -1,7 +1,12 @@
+"use client";
+
 import Nav from "@/components/Nav";
 import TenantBalanceList from "@/components/TenantBalanceList";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function TenantsPage() {
+  const { authenticated } = useAdminAuth();
+
   return (
     <>
       <Nav />
@@ -9,7 +14,7 @@ export default function TenantsPage() {
         <h1 className="mb-6 text-2xl font-semibold text-stone-900">
           Tenant Balance
         </h1>
-        <TenantBalanceList canEdit={false} />
+        <TenantBalanceList canEdit={authenticated === true} />
       </main>
     </>
   );

@@ -40,7 +40,11 @@ export async function POST(request: NextRequest) {
 
   if (!username || !password) {
     return NextResponse.json(
-      { ok: false, error: "Admin not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD in .env.local." },
+      {
+        ok: false,
+        error:
+          "Admin not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD in .env.local (local) or Vercel → Project Settings → Environment Variables (production).",
+      },
       { status: 500 }
     );
   }
