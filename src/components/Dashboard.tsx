@@ -70,7 +70,6 @@ export default function Dashboard() {
     let occupied = 0;
     let available = 0;
     let overdue = 0;
-    let totalCollectibles = 0;
     let totalTenants = 0;
     let monthlyIncome = 0;
     
@@ -123,7 +122,6 @@ export default function Dashboard() {
           occupied++;
           totalTenants++;
           const metrics = getBedMetrics(bed);
-          totalCollectibles += metrics.remainingBalance;
           monthlyIncome += metrics.monthlyRent || 0;
           
           if (metrics.status === "overdue") {
@@ -193,7 +191,7 @@ export default function Dashboard() {
     recentPayments.sort((a, b) => b.date.localeCompare(a.date));
 
     return {
-      stats: { totalBeds, occupied, available, overdue, totalCollectibles, totalTenants, monthlyIncome },
+      stats: { totalBeds, occupied, available, overdue, totalTenants, monthlyIncome },
       filteredRooms: roomData,
       monthlyIncome,
       overdueTenants,
