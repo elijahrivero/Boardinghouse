@@ -143,7 +143,7 @@ export default function Dashboard() {
           const payments = getPayments(bed);
           payments.slice(-5).forEach(payment => {
             recentPayments.push({
-              tenantName: bed.tenantName,
+              tenantName: bed.tenantName || '',
               amount: payment.amount,
               date: payment.date,
               house,
@@ -153,7 +153,7 @@ export default function Dashboard() {
 
           const matchesSearch =
             !q ||
-            bed.tenantName.toLowerCase().includes(q) ||
+            (bed.tenantName && bed.tenantName.toLowerCase().includes(q)) ||
             room.toLowerCase().includes(q) ||
             house.toLowerCase().includes(q) ||
             bedLetter.toLowerCase().includes(q) ||
