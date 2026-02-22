@@ -10,14 +10,22 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const hasValidConfig =
+const hasValidConfig = 
   firebaseConfig.projectId &&
   firebaseConfig.apiKey &&
-  typeof firebaseConfig.projectId === "string";
+  typeof firebaseConfig.projectId === "string" &&
+  typeof firebaseConfig.apiKey === "string";
 
 let db: Firestore | null = null;
+let isOfflineMode = false;
 
-if (hasValidConfig) {
+export function initializeFirebase() {
+  if (!hasValidConfig) {
+    console.warn("Firebase configuration is incomplete. Running in offline mode.");
+    isOfflineMode = true;
+    return null;
+  }
+
   try {
     let app: FirebaseApp;
     if (getApps().length === 0) {
@@ -26,9 +34,21 @@ if (hasValidConfig) {
       app = getApps()[0] as FirebaseApp;
     }
     db = getFirestore(app);
-  } catch {
-    db = null;
+    console.log("Firebase initialized successfully");
+    return db;
+  } catch (error) {
+    console.error("Failed to initialize Firebase:", error);
+    isOfflineMode = true;
+    return null;
   }
+}
+
+export function getFirebaseStatus() {
+  return {
+    isConfigured: hasValidConfig,
+    isOffline: isOfflineMode,
+    db
+  };
 }
 
 export { db };

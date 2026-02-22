@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getFirebaseStatus } from "@/lib/firebase";
 import type { BedSpace } from "@/types";
 import {
   loadBedsFromStorage,
@@ -304,52 +304,6 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-
-      {/* Overdue Tenants */}
-      {overdueTenants.length > 0 && (
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-rose-300 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 2.502-1.908 0-.153-.015-.345-.015-.508 0-.214.015-.459.015-.637 0-.577-.015-.939.015-1.511 0-.807-.015-1.466.015-2.043 0-1.755-.015-3.255.015-4.71 0-2.773 1.702-4.746 4.746-4.746 1.326 0 2.553 1.702 4.746 4.746 4.746 0 0 1.326-1.702 4.746-4.746z" />
-              </svg>
-              Overdue Tenants ({overdueTenants.length})
-            </h3>
-            <span className="text-sm text-rose-400">
-              Total: ₱{overdueTenants.reduce((sum, tenant) => sum + tenant.remainingBalance, 0).toLocaleString()}
-            </span>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            {overdueTenants.slice(0, 5).map((tenant) => (
-              <div
-                key={tenant.id}
-                className="flex items-center justify-between rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 sm:p-4"
-              >
-                <div className="flex-1">
-                  <p className="font-medium text-slate-100">{tenant.tenantName}</p>
-                  <p className="text-sm text-slate-400">
-                    House {tenant.house} • Room {tenant.roomNumber} • Bed {tenant.bedNumber}
-                  </p>
-                  {tenant.nextDueDate && (
-                    <p className="text-xs text-rose-400 mt-1">Due: {tenant.nextDueDate}</p>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-rose-300">
-                    ₱{tenant.remainingBalance.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-rose-400">Overdue</p>
-                </div>
-              </div>
-            ))}
-            {overdueTenants.length > 5 && (
-              <p className="text-center text-sm text-rose-400 pt-2">
-                ... and {overdueTenants.length - 5} more overdue tenants
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Recent Payments Activity */}
       {recentPayments.length > 0 && (

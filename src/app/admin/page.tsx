@@ -12,6 +12,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [overdueCount, setOverdueCount] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -158,7 +159,7 @@ export default function AdminPage() {
 
   return (
     <>
-      <Nav />
+      <Nav overdueCount={overdueCount} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -184,7 +185,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <AdminPanel />
+        <AdminPanel onOverdueCountChange={setOverdueCount} />
       </main>
     </>
   );
