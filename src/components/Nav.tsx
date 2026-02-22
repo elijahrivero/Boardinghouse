@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
-  { href: "/", label: "Dashboard", icon: "📊" },
-  { href: "/admin", label: "Admin", icon: "⚙️" }
+  { href: "/", label: "Dashboard", icon: "chart-bar" },
+  { href: "/admin", label: "Admin", icon: "cog" }
 ];
 
 export default function Nav() {
@@ -19,7 +19,10 @@ export default function Nav() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-slate-100">
-            🏠 Boarding House
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />
+            </svg>
+            Boarding House
           </Link>
 
           {/* Desktop Navigation */}
@@ -34,7 +37,10 @@ export default function Nav() {
                     : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 }`}
               >
-                <span className="text-base">{icon}</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {icon === "chart-bar" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" />}
+                  {icon === "cog" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0 1.594-2.924 3.35-2.924 1.594 0 3.35 2.924 1.594 3.35a2.824 2.824 0 005.646 0 2.924 0 1.594 2.924 1.594 0 2.924-2.824 2.824-2.824h-4.705c-1.594 0-2.824-1.594-2.824v4.705c0 1.594 1.594 2.824 2.824h4.705z" />}
+                </svg>
                 <span>{label}</span>
               </Link>
             ))}
@@ -87,7 +93,10 @@ export default function Nav() {
                       : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                   }`}
                 >
-                  <span className="text-xl">{icon}</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {icon === "chart-bar" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" />}
+                    {icon === "cog" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0 1.594-2.924 3.35-2.924 1.594 0 3.35 2.924 1.594 3.35a2.824 2.824 0 005.646 0 2.924 0 1.594 2.924 1.594 0 2.924-2.824 2.824-2.824h-4.705c-1.594 0-2.824-1.594-2.824v4.705c0 1.594 1.594 2.824 2.824h4.705z" />}
+                  </svg>
                   <span>{label}</span>
                 </Link>
               ))}

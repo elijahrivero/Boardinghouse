@@ -224,8 +224,11 @@ export default function Dashboard() {
       <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-r from-slate-800/70 to-slate-800/50 p-4 sm:p-6 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 mb-2">
-              📊 Dashboard Overview
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 mb-2 flex items-center gap-2">
+              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" />
+              </svg>
+              Dashboard Overview
             </h2>
             <p className="text-sm text-slate-400">
               Real-time insights into your boarding house performance
@@ -260,23 +263,33 @@ export default function Dashboard() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
         {[
-          { label: "Tenants", value: stats.totalTenants, icon: "👥" },
-          { label: "Total Beds", value: stats.totalBeds, icon: "🛏️" },
-          { label: "Occupied", value: stats.occupied, icon: "✅" },
-          { label: "Available", value: stats.available, icon: "🏠" },
-          { label: "Monthly Income", value: `₱${monthlyIncome.toLocaleString()}`, icon: "💰" },
-          { label: "Overdue", value: stats.overdue, icon: "⚠️" },
+          { label: "Tenants", value: stats.totalTenants, icon: "users" },
+          { label: "Total Beds", value: stats.totalBeds, icon: "bed" },
+          { label: "Occupied", value: stats.occupied, icon: "check-circle" },
+          { label: "Available", value: stats.available, icon: "home" },
+          { label: "Monthly Income", value: `₱${monthlyIncome.toLocaleString()}`, icon: "currency-dollar" },
+          { label: "Overdue", value: stats.overdue, icon: "exclamation-triangle" },
         ].map(({ label, value, icon }) => (
           <div
             key={label}
             className="group rounded-xl border border-slate-700/50 bg-slate-800/50 p-3 sm:p-4 shadow-lg backdrop-blur transition hover:border-slate-600/50 hover:bg-slate-800/70 cursor-help"
             title={`Click to view details about ${label.toLowerCase()}`}
           >
-            <p className="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
-              {label}
-            </p>
-            <p className="mt-1 text-xl sm:text-2xl font-semibold text-slate-100 flex items-center gap-2">
-              <span className="text-lg sm:text-xl">{icon}</span> {value}
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {icon === "users" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 8 4 4 0 008-4 4 4 0 00-8 4zM4 12a8 8 0 018 8 8 8 0 01-8-8z" />}
+                {icon === "bed" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />}
+                {icon === "check-circle" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                {icon === "home" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />}
+                {icon === "currency-dollar" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 3 3 3 .895 3 3-3 1.657 0 3-.895 3-3z" />}
+                {icon === "exclamation-triangle" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 2.502-1.908 0-.153-.015-.345-.015-.508 0-.214.015-.459.015-.637 0-.577-.015-.939.015-1.511 0-.807-.015-1.466.015-2.043 0-1.755-.015-3.255.015-4.71 0-2.773 1.702-4.746 4.746-4.746 1.326 0 2.553 1.702 4.746 4.746 4.746 0 0 1.326-1.702 4.746-4.746z" />}
+              </svg>
+              <p className="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
+                {label}
+              </p>
+            </div>
+            <p className="text-xl sm:text-2xl font-semibold text-slate-100">
+              {value}
             </p>
             <div className="mt-2 text-xs text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
               {label === "Tenants" && "Total number of tenants"}
@@ -315,7 +328,7 @@ export default function Dashboard() {
                 setSearchQuery("");
               }
             }}
-            placeholder="🔍 Search... (ESC to clear)"
+            placeholder="Search tenants, rooms, or beds... (ESC to clear)"
             className="w-full rounded-lg border border-slate-600 bg-slate-900 pl-9 sm:pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base text-slate-100 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500"
             aria-label="Search tenants, rooms, or beds"
             autoComplete="off"
@@ -339,7 +352,10 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-rose-300 flex items-center gap-2">
-              ⚠️ Overdue Tenants ({overdueTenants.length})
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 2.502-1.908 0-.153-.015-.345-.015-.508 0-.214.015-.459.015-.637 0-.577-.015-.939.015-1.511 0-.807-.015-1.466.015-2.043 0-1.755-.015-3.255.015-4.71 0-2.773 1.702-4.746 4.746-4.746 1.326 0 2.553 1.702 4.746 4.746 4.746 0 0 1.326-1.702 4.746-4.746z" />
+              </svg>
+              Overdue Tenants ({overdueTenants.length})
             </h3>
             <span className="text-sm text-rose-400">
               Total: ₱{overdueTenants.reduce((sum, tenant) => sum + tenant.remainingBalance, 0).toLocaleString()}
@@ -382,7 +398,10 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-emerald-300 flex items-center gap-2">
-              💰 Recent Payments
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 3 3 3 .895 3 3-3 1.657 0 3-.895 3-3z" />
+              </svg>
+              Recent Payments
             </h3>
             <span className="text-sm text-emerald-400">
               Last {recentPayments.length} payments
@@ -467,8 +486,15 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {bed?.tenantName ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 8z" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />
+                        )}
+                      </svg>
                       <span className="text-sm sm:font-medium text-slate-200 group-hover:text-slate-100 transition-colors">
-                        {bed?.tenantName ? "👤" : "🛏️"} Bed {bedLetter}
+                        Bed {bedLetter}
                       </span>
                     </div>
                     <span
