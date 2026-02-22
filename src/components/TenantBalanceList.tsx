@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { collection, doc, deleteDoc, updateDoc, onSnapshot, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getFirebaseStatus } from "@/lib/firebase";
 import type { BedSpace, TenantBalance, TenantPaymentStatus, PaymentRecord } from "@/types";
 
 const STORAGE_KEY = "boardinghouse-beds";
@@ -295,7 +295,8 @@ export default function TenantBalanceList({ canEdit = true, searchQuery: externa
   const [trashOpen, setTrashOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
-  const hasFirebase = Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && db);
+  const firebaseStatus = getFirebaseStatus();
+  const hasFirebase = firebaseStatus.isConfigured && firebaseStatus.db;
 
   const trashTenants = bedsToTenants(beds, true);
   const filteredTenants = tenants.filter((t) => {

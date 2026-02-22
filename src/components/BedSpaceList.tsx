@@ -10,7 +10,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getFirebaseStatus } from "@/lib/firebase";
 import type { BedSpace } from "@/types";
 import { ROOM_BED_COUNTS } from "@/types";
 import BedModal from "./BedModal";
@@ -91,7 +91,8 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
   const [modalMode, setModalMode] = useState<"view" | "edit" | "add">("view");
   const [saving, setSaving] = useState(false);
 
-  const hasFirebase = Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && db);
+  const firebaseStatus = getFirebaseStatus();
+  const hasFirebase = firebaseStatus.isConfigured && firebaseStatus.db;
 
   useEffect(() => {
     if (!hasFirebase || !db) {

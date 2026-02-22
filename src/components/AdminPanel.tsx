@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getFirebaseStatus } from "@/lib/firebase";
 import type { BedSpace } from "@/types";
 import { loadBedsFromStorage, getBedMetrics, STORAGE_KEY } from "@/lib/boarding";
 import BedSpaceList from "./BedSpaceList";
@@ -14,7 +14,8 @@ export default function AdminPanel({ onOverdueCountChange }: { onOverdueCountCha
   const [view, setView] = useState<ViewMode>("beds");
   const [searchQuery, setSearchQuery] = useState("");
   const [beds, setBeds] = useState<BedSpace[]>([]);
-  const hasFirebase = Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && db);
+  const firebaseStatus = getFirebaseStatus();
+  const hasFirebase = firebaseStatus.isConfigured && firebaseStatus.db;
 
   useEffect(() => {
     if (!hasFirebase || !db) {

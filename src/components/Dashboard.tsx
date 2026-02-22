@@ -35,7 +35,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [modalBed, setModalBed] = useState<BedSpace | Partial<BedSpace> | null>(null);
-  const hasFirebase = Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && db);
+  const firebaseStatus = getFirebaseStatus();
+  const hasFirebase = firebaseStatus.isConfigured && firebaseStatus.db;
 
   useEffect(() => {
     if (!hasFirebase || !db) {
