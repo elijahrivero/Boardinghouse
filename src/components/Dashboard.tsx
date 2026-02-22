@@ -213,51 +213,10 @@ export default function Dashboard() {
           <p className="text-sm text-slate-500">Please wait while we fetch the latest information</p>
         </div>
       </div>
-    );
   }
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Dashboard Overview Header */}
-      <div className="rounded-2xl border border-slate-700/50 bg-gradient-to-r from-slate-800/70 to-slate-800/50 p-4 sm:p-6 shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-100 mb-2 flex items-center gap-2">
-              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" />
-              </svg>
-              Dashboard Overview
-            </h2>
-            <p className="text-sm text-slate-400">
-              Real-time insights into your boarding house performance
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="text-center">
-              <p className="text-slate-400">Occupancy Rate</p>
-              <p className="text-lg font-semibold text-emerald-400">
-                {stats.totalBeds > 0 ? Math.round((stats.occupied / stats.totalBeds) * 100) : 0}%
-              </p>
-              <div className="w-16 h-2 bg-slate-700 rounded-full mt-1 overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-400 rounded-full transition-all duration-500"
-                  style={{ width: `${stats.totalBeds > 0 ? (stats.occupied / stats.totalBeds) * 100 : 0}%` }}
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <p className="text-slate-400">Monthly Revenue</p>
-              <p className="text-lg font-semibold text-amber-400">
-                ₱{monthlyIncome.toLocaleString()}
-              </p>
-              <div className="w-16 h-2 bg-slate-700 rounded-full mt-1 overflow-hidden">
-                <div className="h-full bg-amber-400 rounded-full w-3/4" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
         {[
