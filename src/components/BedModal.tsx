@@ -66,23 +66,25 @@ export default function BedModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
-          <h3 className="font-semibold text-stone-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4" onClick={onClose}>
+      <div className="relative z-10 w-full max-w-md rounded-xl bg-white shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-stone-200 px-3 sm:px-4 py-3">
+          <h3 className="font-semibold text-stone-900 text-sm sm:text-base">
             House {form.house} — Room {form.roomNumber} — Bed {form.bedNumber}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+            className="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
           >
-            ✕
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
         {showAddForm ? (
-          <form onSubmit={handleSubmit} className="space-y-4 p-4">
+          <form onSubmit={handleSubmit} className="space-y-4 p-3 sm:p-4">
             {mode === "edit" ? (
               <div>
                 <label className="mb-1 block text-sm font-medium text-stone-700">Status</label>
@@ -91,7 +93,7 @@ export default function BedModal({
                   onChange={(e) =>
                     setForm((f) => ({ ...f, status: e.target.value as "available" | "occupied" }))
                   }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900"
                 >
                   <option value="available">Available</option>
                   <option value="occupied">Occupied</option>
@@ -108,7 +110,7 @@ export default function BedModal({
                     type="text"
                     value={form.tenantName}
                     onChange={(e) => setForm((f) => ({ ...f, tenantName: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
                     placeholder="Enter tenant name"
                     required={mode === "add"}
                   />
@@ -121,7 +123,7 @@ export default function BedModal({
                     type="date"
                     value={form.moveInDate}
                     onChange={(e) => setForm((f) => ({ ...f, moveInDate: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
                   />
                 </div>
                 <div>
@@ -132,7 +134,7 @@ export default function BedModal({
                     type="text"
                     value={form.tenantPhone}
                     onChange={(e) => setForm((f) => ({ ...f, tenantPhone: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
                     placeholder="Optional"
                   />
                 </div>
@@ -141,19 +143,19 @@ export default function BedModal({
                   <textarea
                     value={form.notes}
                     onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                    rows={2}
-                    className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                    rows={3}
+                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
                     placeholder="Optional"
                   />
                 </div>
               </>
             )}
-            <div className="flex flex-wrap gap-2 border-t border-stone-200 pt-4">
+            <div className="flex flex-col sm:flex-wrap gap-2 border-t border-stone-200 pt-4">
               {showAddButton && (
                 <button
                   type="submit"
                   disabled={saving || !form.tenantName.trim()}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                  className="w-full sm:w-auto rounded-lg bg-stone-900 px-4 py-3 sm:py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50 transition-colors"
                 >
                   {saving ? "Adding…" : "Add"}
                 </button>
@@ -163,7 +165,7 @@ export default function BedModal({
                   <button
                     type="submit"
                     disabled={saving}
-                    className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                    className="w-full sm:w-auto rounded-lg bg-stone-900 px-4 py-3 sm:py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50 transition-colors"
                   >
                     {saving ? "Saving…" : "Save"}
                   </button>
@@ -175,17 +177,16 @@ export default function BedModal({
                       if (bed.id) onDelete(bed.id);
                     }}
                     disabled={saving}
-                    className="cursor-pointer rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full sm:w-auto cursor-pointer rounded-lg bg-rose-600 px-4 py-3 sm:py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
                   >
                     Delete
                   </button>
                 </>
               )}
-              <div className="flex-1" />
               <button
                 type="button"
                 onClick={() => (showEditDeleteButtons ? setIsEditing(false) : onClose())}
-                className="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-700"
+                className="w-full sm:w-auto rounded-lg border border-stone-200 px-4 py-3 sm:py-2 text-sm font-medium text-stone-700 transition-colors"
               >
                 {showEditDeleteButtons ? "Cancel" : "Close"}
               </button>

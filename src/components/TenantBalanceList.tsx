@@ -63,6 +63,7 @@ function getMonthsOwed(moveInDate: string, monthlyRent: number): number {
 
 function computeStatus(totalOwed: number, totalPaid: number, monthlyRent: number): TenantPaymentStatus {
   const remaining = totalOwed - totalPaid;
+  if (totalOwed === 0 && totalPaid === 0) return "due_soon"; // Not yet due, first payment coming
   if (remaining <= 0) return "paid";
   if (remaining <= monthlyRent * 0.5) return "due_soon";
   return "overdue";
@@ -179,7 +180,7 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
                 value={monthlyRent}
                 onChange={(e) => setMonthlyRent(e.target.value)}
                 placeholder="Enter monthly rent"
-                className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-500"
               />
               <button
                 type="submit"
@@ -208,7 +209,7 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
               type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
-              className="rounded-lg border border-stone-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-500"
             />
             <input
               type="number"
@@ -217,7 +218,7 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
               value={paymentAmount}
               onChange={(e) => setPaymentAmount(e.target.value)}
               placeholder="Amount (₱)"
-              className="w-28 rounded-lg border border-stone-300 px-3 py-2 text-sm"
+              className="w-28 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-500"
             />
             <button
               type="submit"
@@ -265,19 +266,22 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
 
 interface TenantBalanceListProps {
   canEdit?: boolean;
+  searchQuery?: string;
+  variant?: "default" | "admin";
 }
 
-export default function TenantBalanceList({ canEdit = true }: TenantBalanceListProps) {
+export default function TenantBalanceList({ canEdit = true, searchQuery: externalSearch = "", variant = "default" }: TenantBalanceListProps) {
   const [tenants, setTenants] = useState<TenantBalance[]>([]);
   const [beds, setBeds] = useState<BedSpace[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingTenant, setEditingTenant] = useState<TenantBalance | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
+  const searchQuery = variant === "admin" ? externalSearch : internalSearch;
   const [trashOpen, setTrashOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
-  const hasFirebase = Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+  const hasFirebase = Boolean(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && db);
 
   const trashTenants = bedsToTenants(beds, true);
   const filteredTenants = tenants.filter((t) => {
@@ -292,7 +296,7 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
   });
 
   useEffect(() => {
-    if (!hasFirebase) {
+    if (!hasFirebase || !db) {
       const load = () => {
         const data = loadBedsFromStorage();
         setBeds(data);
@@ -331,7 +335,7 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
   const handleSetRent = useCallback(
     async (id: string, monthlyRent: number) => {
       try {
-        if (hasFirebase) {
+        if (hasFirebase && db) {
           await updateDoc(doc(db, "beds", id), {
             monthlyRent,
             updatedAt: serverTimestamp(),
@@ -357,7 +361,7 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
         const payments = getPayments(bed);
         const newPayments = [...payments, { date, amount }].sort((a, b) => a.date.localeCompare(b.date));
 
-        if (hasFirebase) {
+        if (hasFirebase && db) {
           await updateDoc(doc(db, "beds", id), {
             payments: newPayments,
             updatedAt: serverTimestamp(),
@@ -385,7 +389,7 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
       setDeleteConfirm(null);
       const deletedAt = new Date().toISOString();
       try {
-        if (hasFirebase) {
+        if (hasFirebase && db) {
           await updateDoc(doc(db, "beds", id), {
             deletedAt,
             updatedAt: serverTimestamp(),
@@ -407,7 +411,7 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
     async (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       try {
-        if (hasFirebase) {
+        if (hasFirebase && db) {
           await updateDoc(doc(db, "beds", id), {
             deletedAt: null,
             updatedAt: serverTimestamp(),
@@ -430,7 +434,7 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
       e.stopPropagation();
       if (!confirm("Permanently delete this tenant? This cannot be undone.")) return;
       try {
-        if (hasFirebase) {
+        if (hasFirebase && db) {
           await deleteDoc(doc(db, "beds", id));
         } else {
           const updated = beds.filter((b) => b.id !== id);
@@ -455,23 +459,26 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
     );
   }
 
+  const isAdmin = variant === "admin";
+  const showSearchInList = !isAdmin && tenants.length > 0;
+
   return (
     <div className="space-y-4">
       {error && (
-        <p className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">{error}</p>
+        <p className={`rounded-2xl px-4 py-2 text-sm ${isAdmin ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-800"}`}>{error}</p>
       )}
-      {tenants.length > 0 && (
+      {showSearchInList && (
         <div className="flex gap-2">
           <input
             type="search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => setInternalSearch(e.target.value)}
             placeholder="Search by name, room, or bed..."
             className="flex-1 rounded-lg border border-stone-300 px-4 py-2 text-sm placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
           />
           <button
             type="button"
-            onClick={() => setSearchQuery("")}
+            onClick={() => setInternalSearch("")}
             className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
           >
             Clear
@@ -479,27 +486,27 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
         </div>
       )}
       {tenants.length === 0 ? (
-        <p className="rounded-xl border border-stone-200 bg-stone-50 p-6 text-center text-stone-600">
+        <p className={`rounded-2xl p-8 text-center ${isAdmin ? "border border-slate-600/50 bg-slate-800/40 text-slate-400" : "border border-stone-200 bg-stone-50 text-stone-600"}`}>
           No tenants yet. Add a tenant in the Bed Spaces section to see them here.
         </p>
       ) : filteredTenants.length === 0 ? (
-        <p className="rounded-xl border border-stone-200 bg-stone-50 p-6 text-center text-stone-600">
+        <p className={`rounded-2xl p-8 text-center ${isAdmin ? "border border-slate-600/50 bg-slate-800/40 text-slate-400" : "border border-stone-200 bg-stone-50 text-stone-600"}`}>
           No tenants match &quot;{searchQuery}&quot;
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white shadow-sm">
+        <div className={`overflow-x-auto shadow-lg ${isAdmin ? "rounded-2xl border border-slate-600/50 bg-slate-800/60" : "rounded-xl border border-stone-200 bg-white"}`}>
           <table className="w-full min-w-[500px]">
             <thead>
-              <tr className="border-b border-stone-200 bg-stone-50">
-                <th className="px-4 py-3 text-left text-sm font-medium text-stone-600">Tenant</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-stone-600">Room / Bed</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-stone-600">Move-in</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-stone-600">Monthly Rent</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-stone-600">Next Due</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-stone-600">Paid</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-stone-600">Balance</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-stone-600">Status</th>
-                {canEdit && <th className="w-20 px-4 py-3"></th>}
+              <tr className={isAdmin ? "border-b border-slate-600/50 bg-slate-700/40" : "border-b border-stone-200 bg-stone-50"}>
+                <th className={`px-5 py-4 text-left text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Tenant</th>
+                <th className={`px-5 py-4 text-left text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Room / Bed</th>
+                <th className={`px-5 py-4 text-left text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Move-in</th>
+                <th className={`px-5 py-4 text-right text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Monthly Rent</th>
+                <th className={`px-5 py-4 text-right text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Next Due</th>
+                <th className={`px-5 py-4 text-right text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Paid</th>
+                <th className={`px-5 py-4 text-right text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Balance</th>
+                <th className={`px-5 py-4 text-right text-sm font-medium ${isAdmin ? "text-slate-300" : "text-stone-600"}`}>Status</th>
+                {canEdit && <th className={`w-20 px-5 py-4`}></th>}
               </tr>
             </thead>
             <tbody>
@@ -507,32 +514,41 @@ export default function TenantBalanceList({ canEdit = true }: TenantBalanceListP
                 <tr
                   key={t.id}
                   onClick={() => setEditingTenant(t)}
-                  className="cursor-pointer border-b border-stone-100 last:border-0 hover:bg-stone-50 transition"
+                  className={`cursor-pointer transition ${isAdmin ? "border-b border-slate-600/30 hover:bg-slate-700/30" : "border-b border-stone-100 last:border-0 hover:bg-stone-50"}`}
+                  style={isAdmin ? { height: "72px" } : undefined}
                 >
-                  <td className="px-4 py-3 font-medium text-stone-900">{t.tenantName}</td>
-                  <td className="px-4 py-3 text-stone-600">
+                  <td className={`font-medium ${isAdmin ? "px-5 py-5 text-slate-100" : "px-4 py-3 text-stone-900"}`}>{t.tenantName}</td>
+                  <td className={isAdmin ? "px-5 py-5 text-slate-400" : "px-4 py-3 text-stone-600"}>
                     {t.roomNumber} / Bed {t.bedNumber}
                   </td>
-                  <td className="px-4 py-3 text-stone-600">{t.moveInDate || "—"}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-stone-700">
+                  <td className={isAdmin ? "px-5 py-5 text-slate-400" : "px-4 py-3 text-stone-600"}>{t.moveInDate || "—"}</td>
+                  <td className={`text-right tabular-nums ${isAdmin ? "px-5 py-5 text-slate-300" : "px-4 py-3 text-stone-700"}`}>
                     ₱{t.monthlyRent.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-right text-stone-600">{t.nextDueDate || "—"}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-stone-700">
+                  <td className={`text-right ${isAdmin ? "px-5 py-5 text-slate-400" : "px-4 py-3 text-stone-600"}`}>{t.nextDueDate || "—"}</td>
+                  <td className={`text-right tabular-nums ${isAdmin ? "px-5 py-5 text-slate-300" : "px-4 py-3 text-stone-700"}`}>
                     ₱{t.amountPaid.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums font-medium text-stone-900">
+                  <td className={`text-right tabular-nums font-medium ${isAdmin ? "px-5 py-5 text-slate-100" : "px-4 py-3 text-stone-900"}`}>
                     ₱{t.remainingBalance.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className={isAdmin ? "px-5 py-5 text-right" : "px-4 py-3 text-right"}>
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${STATUS_STYLES[t.status]}`}
+                      className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
+                        isAdmin
+                          ? t.status === "paid"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : t.status === "overdue"
+                              ? "bg-rose-500/20 text-rose-400"
+                              : "bg-amber-500/20 text-amber-400"
+                          : STATUS_STYLES[t.status]
+                      }`}
                     >
                       {STATUS_LABELS[t.status]}
                     </span>
                   </td>
                   {canEdit && (
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <td className={isAdmin ? "px-5 py-5" : "px-4 py-3"} onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={(e) => handleDeleteClick(e, t.id, t.tenantName)}

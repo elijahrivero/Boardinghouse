@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,12 +10,25 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
+const hasValidConfig =
+  firebaseConfig.projectId &&
+  firebaseConfig.apiKey &&
+  typeof firebaseConfig.projectId === "string";
 
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0] as FirebaseApp;
+let db: Firestore | null = null;
+
+if (hasValidConfig) {
+  try {
+    let app: FirebaseApp;
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApps()[0] as FirebaseApp;
+    }
+    db = getFirestore(app);
+  } catch {
+    db = null;
+  }
 }
 
-export const db = getFirestore(app);
+export { db };

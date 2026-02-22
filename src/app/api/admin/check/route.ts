@@ -25,6 +25,13 @@ function verifySessionToken(token: string): boolean {
 export async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
+  const isDevelopment = process.env.NODE_ENV !== "production";
+  const hasEnvVars = process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD;
+
+  // Development bypass - if no env vars set, allow any session
+  if (isDevelopment && !hasEnvVars && token) {
+    return NextResponse.json({ ok: true, development: true });
+  }
 
   if (!token || !verifySessionToken(token)) {
     return NextResponse.json({ ok: false });

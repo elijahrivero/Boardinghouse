@@ -37,6 +37,34 @@ function verifySessionToken(token: string): boolean {
 export async function POST(request: NextRequest) {
   const username = process.env.ADMIN_USERNAME;
   const password = process.env.ADMIN_PASSWORD;
+  const isDevelopment = process.env.NODE_ENV !== "production";
+
+  // Development bypass - allow any credentials in development
+  if (isDevelopment && !username && !password) {
+    let body: { username?: string; password?: string };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
+    }
+
+    // Create session for development
+    const token = createSessionToken();
+    const cookieStore = await cookies();
+    cookieStore.set(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: false, // Allow HTTP in development
+      sameSite: "lax",
+      maxAge: MAX_AGE,
+      path: "/",
+    });
+
+    return NextResponse.json({ 
+      ok: true, 
+      development: true,
+      message: "Development mode: Any credentials accepted"
+    });
+  }
 
   if (!username || !password) {
     return NextResponse.json(

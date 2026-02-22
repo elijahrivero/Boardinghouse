@@ -1,20 +1,22 @@
 "use client";
 
 import Nav from "@/components/Nav";
-import BedSpaceList from "@/components/BedSpaceList";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import Dashboard from "@/components/Dashboard";
 
 export default function Home() {
-  const { authenticated } = useAdminAuth();
-
   return (
     <>
       <Nav />
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        <h1 className="mb-6 text-2xl font-semibold text-stone-900">
-          Bed Space Availability
-        </h1>
-        <BedSpaceList canEdit={authenticated === true} />
+      <main className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-100">
+            Boarding House Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-slate-400 mt-2">
+            Manage your boarding house efficiently
+          </p>
+        </div>
+        <Dashboard />
       </main>
     </>
   );
