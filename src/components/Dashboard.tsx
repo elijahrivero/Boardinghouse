@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [modalBed, setModalBed] = useState<BedSpace | Partial<BedSpace> | null>(null);
+  const [detailsModal, setDetailsModal] = useState<{ type: string; data: any } | null>(null);
   const firebaseStatus = getFirebaseStatus();
   const hasFirebase = firebaseStatus.isConfigured && firebaseStatus.db;
 
@@ -66,7 +67,7 @@ export default function Dashboard() {
 
   const activeBeds = useMemo(() => beds.filter((b) => !b.deletedAt), [beds]);
 
-  const { stats, filteredRooms, monthlyIncome, overdueTenants, recentPayments } = useMemo(() => {
+  const { stats, filteredRooms, monthlyIncome, overdueTenants } = useMemo(() => {
     let totalBeds = 0;
     let occupied = 0;
     let available = 0;
@@ -196,7 +197,6 @@ export default function Dashboard() {
       filteredRooms: roomData,
       monthlyIncome,
       overdueTenants,
-      recentPayments: recentPayments.slice(0, 10), // Show only last 10 payments
     };
   }, [activeBeds, searchQuery]);
 
@@ -206,9 +206,6 @@ export default function Dashboard() {
         <div className="text-center space-y-4">
           <div className="relative inline-flex items-center justify-center">
             <div className="h-12 w-12 animate-spin rounded-full border-2 border-slate-600 border-t-slate-300"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-lg">🏠</span>
-            </div>
           </div>
           <p className="text-slate-400 animate-pulse">Loading boarding house data...</p>
           <p className="text-sm text-slate-500">Please wait while we fetch the latest information</p>
@@ -226,13 +223,77 @@ export default function Dashboard() {
           { label: "Total Beds", value: stats.totalBeds, icon: "bed" },
           { label: "Occupied", value: stats.occupied, icon: "check-circle" },
           { label: "Available", value: stats.available, icon: "home" },
-          { label: "Monthly Income", value: `₱${monthlyIncome.toLocaleString()}`, icon: "currency-dollar" },
           { label: "Overdue", value: stats.overdue, icon: "exclamation-triangle" },
         ].map(({ label, value, icon }) => (
           <div
             key={label}
-            className="group rounded-xl border border-slate-700/50 bg-slate-800/50 p-3 sm:p-4 shadow-lg backdrop-blur transition hover:border-slate-600/50 hover:bg-slate-800/70 cursor-help"
+            className="group rounded-xl border border-slate-700/50 bg-slate-800/50 p-3 sm:p-4 shadow-lg backdrop-blur transition hover:border-slate-600/50 hover:bg-slate-800/70 cursor-pointer"
             title={`Click to view details about ${label.toLowerCase()}`}
+            onClick={() => {
+              if (label === "Tenants") {
+                setDetailsModal({
+                  type: "Tenants",
+                  data: {
+                    total: stats.totalTenants,
+                    breakdown: activeBeds.filter(b => b.tenantName)
+                  }
+                });
+              } else if (label === "Total Beds") {
+                setDetailsModal({
+                  type: "Total Beds", 
+                  data: {
+                    total: stats.totalBeds,
+                    occupied: stats.occupied,
+                    available: stats.available,
+                    occupancyRate: stats.totalBeds > 0 ? Math.round((stats.occupied / stats.totalBeds) * 100) : 0
+                  }
+                });
+              } else if (label === "Occupied") {
+                setDetailsModal({
+                  type: "Occupied Beds",
+                  data: activeBeds.filter(b => b.tenantName).map(bed => ({
+                    tenantName: bed.tenantName,
+                    house: bed.house,
+                    room: bed.roomNumber,
+                    bed: bed.bedNumber,
+                    rent: bed.monthlyRent
+                  }))
+                });
+              } else if (label === "Available") {
+                setDetailsModal({
+                  type: "Available Beds", 
+                  data: activeBeds.filter(b => !b.tenantName).map(bed => ({
+                    house: bed.house,
+                    room: bed.roomNumber,
+                    bed: bed.bedNumber
+                  }))
+                });
+              } else if (label === "Monthly Income") {
+                setDetailsModal({
+                  type: "Monthly Income",
+                  data: {
+                    total: monthlyIncome,
+                    perTenant: stats.totalTenants > 0 ? Math.round(monthlyIncome / stats.totalTenants) : 0,
+                    sources: activeBeds.filter(b => b.tenantName).map(bed => ({
+                      tenantName: bed.tenantName,
+                      monthlyRent: bed.monthlyRent
+                    }))
+                  }
+                });
+              } else if (label === "Overdue") {
+                setDetailsModal({
+                  type: "Overdue Tenants",
+                  data: overdueTenants.map(tenant => ({
+                    tenantName: tenant.tenantName,
+                    house: tenant.house,
+                    room: tenant.roomNumber,
+                    bed: tenant.bedNumber,
+                    remainingBalance: tenant.remainingBalance,
+                    nextDueDate: tenant.nextDueDate
+                  }))
+                });
+              }
+            }}
           >
             <div className="flex items-center gap-2 mb-2">
               <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,51 +367,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Payments Activity */}
-      {recentPayments.length > 0 && (
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-emerald-300 flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 3 3 3 .895 3 3-3 1.657 0 3-.895 3-3z" />
-              </svg>
-              Recent Payments
-            </h3>
-            <span className="text-sm text-emerald-400">
-              Last {recentPayments.length} payments
-            </span>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            {recentPayments.map((payment, index) => (
-              <div
-                key={`${payment.tenantName}-${payment.date}-${index}`}
-                className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 sm:p-4"
-              >
-                <div className="flex-1">
-                  <p className="font-medium text-slate-100">{payment.tenantName}</p>
-                  <p className="text-sm text-slate-400">
-                    House {payment.house} • Room {payment.roomNumber}
-                  </p>
-                  <p className="text-xs text-emerald-400 mt-1">
-                    {new Date(payment.date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-emerald-300">
-                    +₱{payment.amount.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-emerald-400">Paid</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Room grid */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
         {filteredRooms.map(({ house, room, key, beds: roomBeds, availableCount, overdueCount }) => (
@@ -367,82 +383,6 @@ export default function Dashboard() {
                 {overdueCount > 0 && (
                   <span className="text-rose-400">{overdueCount} overdue</span>
                 )}
-              </div>
-            </div>
-            <p className="mb-3 sm:mb-4 text-xs sm:text-sm text-slate-500">
-              {roomBeds.length} bed{roomBeds.length !== 1 ? "s" : ""}
-            </p>
-            <div className="space-y-2 sm:space-y-3">
-              {roomBeds.map(({ bed, bedLetter, metrics }) => (
-                <button
-                  type="button"
-                  key={`${key}-${bedLetter}`}
-                  onClick={() =>
-                    setModalBed(
-                      bed ?? {
-                        house,
-                        roomNumber: room,
-                        bedNumber: bedLetter,
-                        status: "available",
-                      }
-                    )
-                  }
-                  onTouchStart={(e) => {
-                    // Add haptic feedback on touch devices
-                    if ('vibrate' in navigator) {
-                      navigator.vibrate(50);
-                    }
-                  }}
-                  className="group w-full rounded-xl border border-slate-700/50 bg-slate-900/50 p-4 sm:p-5 text-left transition-all duration-200 hover:border-slate-600/70 hover:bg-slate-800/60 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-slate-500 active:bg-slate-800/80 touch-manipulation"
-                  aria-label={`Bed ${bedLetter} - ${bed?.tenantName ? `Occupied by ${bed.tenantName}` : 'Available'}${metrics ? ` - Status: ${STATUS_LABELS[metrics.status]}` : ''}`}
-                  tabIndex={0}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {bed?.tenantName ? (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 8z" />
-                        ) : (
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />
-                        )}
-                      </svg>
-                      <span className="text-sm sm:font-medium text-slate-200 group-hover:text-slate-100 transition-colors">
-                        Bed {bedLetter}
-                      </span>
-                    </div>
-                    <span
-                      className={`rounded-lg border px-2 py-1 sm:px-2.5 sm:py-0.5 text-xs font-medium transition-all duration-300 animate-fade-in ${
-                        bed?.tenantName
-                          ? STATUS_STYLES[metrics?.status ?? "paid"]
-                          : STATUS_STYLES.available
-                      }`}
-                    >
-                      {bed?.tenantName
-                        ? STATUS_LABELS[metrics?.status ?? "paid"]
-                        : "Available"}
-                    </span>
-                  </div>
-                  {bed?.tenantName && metrics && (
-                    <div className="mt-2 sm:mt-3 space-y-1 sm:space-y-2 text-xs sm:text-sm">
-                      <p className="font-medium text-slate-100 group-hover:text-white transition-colors">
-                        {bed.tenantName}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-slate-400">
-                          Balance: <span className="font-medium text-slate-300">₱{metrics.remainingBalance.toLocaleString()}</span>
-                        </p>
-                        {metrics.status === "overdue" && (
-                          <span className="text-xs text-rose-400 font-medium">⚠️ Overdue</span>
-                        )}
-                      </div>
-                      {metrics.nextDueDate && (
-                        <p className="text-slate-500 text-xs">
-                          📅 Due: {metrics.nextDueDate}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </button>
               ))}
             </div>
           </div>
@@ -502,6 +442,181 @@ export default function Dashboard() {
           saving={false}
           canEdit={false}
         />
+      )}
+
+      {/* Details Modal */}
+      {detailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDetailsModal(null)}>
+          <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-slate-900">
+                {detailsModal.type} Details
+              </h3>
+              <button
+                type="button"
+                onClick={() => setDetailsModal(null)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-6 w-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Details Content */}
+            <div className="space-y-4">
+              {detailsModal.type === "Tenants" && (
+                <div>
+                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Total Tenants: {detailsModal.data.total}</h4>
+                    <p className="text-sm text-slate-600">Active tenants in the boarding house</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Breakdown</h4>
+                    <div className="space-y-2">
+                      {detailsModal.data.breakdown.map((tenant: any, index: number) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="text-slate-600">{tenant.tenantName}</span>
+                          <span className="font-medium">House {tenant.house} • Room {tenant.roomNumber} • Bed {tenant.bedNumber}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {detailsModal.type === "Total Beds" && (
+                <div>
+                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Occupancy Overview</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-slate-600">Total Beds:</span>
+                        <span className="font-medium">{detailsModal.data.total}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Occupied:</span>
+                        <span className="font-medium">{detailsModal.data.occupied}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Available:</span>
+                        <span className="font-medium">{detailsModal.data.available}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Occupancy Rate:</span>
+                        <span className="font-medium">{detailsModal.data.occupancyRate}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {detailsModal.type === "Occupied Beds" && (
+                <div>
+                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Occupied Beds ({detailsModal.data.length})</h4>
+                  </div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {detailsModal.data.map((bed: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg text-sm">
+                        <div>
+                          <span className="font-medium text-slate-900">{bed.tenantName}</span>
+                          <span className="text-slate-600">House {bed.house} • Room {bed.roomNumber} • Bed {bed.bedNumber}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium text-slate-900">₱{bed.rent?.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {detailsModal.type === "Available Beds" && (
+                <div>
+                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Available Beds ({detailsModal.data.length})</h4>
+                  </div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {detailsModal.data.map((bed: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg text-sm">
+                        <div>
+                          <span className="text-slate-600">House {bed.house} • Room {bed.roomNumber} • Bed {bed.bedNumber}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-green-600 font-medium">Available</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {detailsModal.type === "Monthly Income" && (
+                <div>
+                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Income Overview</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-slate-600">Total Monthly Income:</span>
+                        <span className="font-medium text-lg">₱{detailsModal.data.total.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600">Per Tenant Average:</span>
+                        <span className="font-medium">₱{detailsModal.data.perTenant.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Income Sources</h4>
+                    <div className="space-y-2">
+                      {detailsModal.data.sources.map((source: any, index: number) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="text-slate-600">{source.tenantName}</span>
+                          <span className="font-medium">₱{source.monthlyRent?.toLocaleString()}/month</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {detailsModal.type === "Overdue Tenants" && (
+                <div>
+                  <div className="mb-4 p-4 bg-rose-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-rose-900 mb-2">Overdue Summary</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-rose-600">Total Overdue:</span>
+                        <span className="font-medium text-lg">₱{detailsModal.data.reduce((sum: number, tenant: any) => sum + tenant.remainingBalance, 0).toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-rose-600">Tenants Overdue:</span>
+                        <span className="font-medium">{detailsModal.data.length}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {detailsModal.data.map((tenant: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-rose-50 rounded-lg text-sm">
+                        <div>
+                          <span className="font-medium text-rose-900">{tenant.tenantName}</span>
+                          <span className="text-rose-600">House {tenant.house} • Room {tenant.roomNumber} • Bed {tenant.bedNumber}</span>
+                          {tenant.nextDueDate && (
+                            <span className="text-xs text-rose-500 mt-1">Due: {tenant.nextDueDate}</span>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium text-rose-900">₱{tenant.remainingBalance.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
