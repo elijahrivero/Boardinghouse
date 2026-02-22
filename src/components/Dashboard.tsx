@@ -213,6 +213,7 @@ export default function Dashboard() {
           <p className="text-sm text-slate-500">Please wait while we fetch the latest information</p>
         </div>
       </div>
+    )
   }
 
   return (
