@@ -115,7 +115,7 @@ interface EditModalProps {
   bed: BedSpace;
   onClose: () => void;
   onSetRent: (id: string, monthlyRent: number) => Promise<void>;
-  onAddPayment: (id: string, date: string, amount: number) => Promise<void>;
+  onAddPayment: (id: string, date: string, amount: number, method: "cash" | "gcash") => Promise<void>;
   canEdit?: boolean;
 }
 
@@ -123,6 +123,7 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
   const [monthlyRent, setMonthlyRent] = useState(String(tenant.monthlyRent || ""));
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "gcash">("cash");
   const [saving, setSaving] = useState(false);
 
   const rentLocked = (tenant.monthlyRent ?? 0) > 0;
@@ -146,7 +147,7 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
     if (amount <= 0) return;
     setSaving(true);
     try {
-      await onAddPayment(tenant.id, paymentDate, amount);
+      await onAddPayment(tenant.id, paymentDate, amount, paymentMethod);
       setPaymentAmount("");
     } finally {
       setSaving(false);
@@ -220,6 +221,14 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
               placeholder="Amount (₱)"
               className="w-28 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder-stone-500"
             />
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as "cash" | "gcash")}
+              className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900"
+            >
+              <option value="cash">Cash</option>
+              <option value="gcash">GCash</option>
+            </select>
             <button
               type="submit"
               disabled={saving || !paymentAmount}
@@ -240,7 +249,12 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
             <ul className="space-y-1 rounded-lg border border-stone-200 p-3">
               {[...tenant.payments].sort((a, b) => b.date.localeCompare(a.date)).map((p, i) => (
                 <li key={i} className="flex justify-between text-sm">
-                  <span className="text-stone-600">{p.date}</span>
+                  <div className="flex flex-col">
+                    <span className="text-stone-600">{p.date}</span>
+                    {p.method && (
+                      <span className="text-xs text-stone-400 capitalize">{p.method}</span>
+                    )}
+                  </div>
                   <span className="font-medium">₱{p.amount.toLocaleString()}</span>
                 </li>
               ))}
@@ -354,12 +368,12 @@ export default function TenantBalanceList({ canEdit = true, searchQuery: externa
   );
 
   const handleAddPayment = useCallback(
-    async (id: string, date: string, amount: number) => {
+    async (id: string, date: string, amount: number, method: "cash" | "gcash" = "cash") => {
       try {
         const bed = beds.find((b) => b.id === id);
         if (!bed) return;
         const payments = getPayments(bed);
-        const newPayments = [...payments, { date, amount }].sort((a, b) => a.date.localeCompare(b.date));
+        const newPayments = [...payments, { date, amount, method }].sort((a, b) => a.date.localeCompare(b.date));
 
         if (hasFirebase && db) {
           await updateDoc(doc(db, "beds", id), {
@@ -372,11 +386,12 @@ export default function TenantBalanceList({ canEdit = true, searchQuery: externa
           setBeds(updated);
           setTenants(bedsToTenants(updated));
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to save.");
+      } catch (error) {
+        console.error("Failed to add payment:", error);
+        throw error;
       }
     },
-    [hasFirebase, beds]
+    [beds, hasFirebase, db]
   );
 
   const handleDeleteClick = useCallback((e: React.MouseEvent, id: string, name: string) => {

@@ -4,6 +4,7 @@ export type TenantPaymentStatus = "paid" | "due_soon" | "overdue";
 export interface PaymentRecord {
   date: string;
   amount: number;
+  method?: "cash" | "gcash";
 }
 
 export interface BedSpace {
