@@ -708,65 +708,36 @@ export default function TenantBalanceList({ canEdit = true, searchQuery: externa
           <p className="text-slate-400">No tenants match &quot;{searchQuery}&quot;</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-700/60 bg-slate-800/50 shadow-lg animate-fade-up">
-          <table className="w-full min-w-[600px]">
-            <thead>
-              <tr className="border-b border-slate-700/60 bg-slate-800/80">
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Tenant</th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Room / Bed</th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Move-in</th>
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Rent</th>
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Next Due</th>
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Paid</th>
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Balance</th>
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
-                {canEdit && <th className="w-14 px-4 py-3.5" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700/40">
-              {filteredTenants.map((t) => {
-                const cfg = STATUS_CONFIG[t.status];
-                return (
-                  <tr
-                    key={t.id}
-                    onClick={() => setEditingTenant(t)}
-                    className={`cursor-pointer transition-colors hover:bg-slate-700/30 ${cfg.row}`}
-                  >
-                    {/* Tenant name with avatar */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-slate-300">
-                            {t.tenantName.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="font-medium text-slate-100">{t.tenantName}</span>
+        <>
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3 animate-fade-up">
+            {filteredTenants.map((t) => {
+              const cfg = STATUS_CONFIG[t.status];
+              return (
+                <div
+                  key={t.id}
+                  onClick={() => setEditingTenant(t)}
+                  className={`cursor-pointer rounded-xl border border-slate-700/60 bg-slate-800/50 p-4 transition-colors active:bg-slate-700/40 ${cfg.row}`}
+                >
+                  {/* Card header */}
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-slate-300">
+                          {t.tenantName.charAt(0).toUpperCase()}
+                        </span>
                       </div>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-400">
-                      {t.roomNumber} / Bed {t.bedNumber}
-                    </td>
-                    <td className="px-5 py-4 text-sm text-slate-400">{t.moveInDate || "—"}</td>
-                    <td className="px-5 py-4 text-right tabular-nums text-sm text-slate-300">
-                      ₱{t.monthlyRent.toLocaleString()}
-                    </td>
-                    <td className="px-5 py-4 text-right text-sm text-slate-400">{t.nextDueDate || "—"}</td>
-                    <td className="px-5 py-4 text-right tabular-nums text-sm text-emerald-400 font-medium">
-                      ₱{t.amountPaid.toLocaleString()}
-                    </td>
-                    <td className="px-5 py-4 text-right tabular-nums text-sm font-semibold">
-                      <span className={t.remainingBalance > 0 ? "text-rose-400" : "text-slate-300"}>
-                        ₱{t.remainingBalance.toLocaleString()}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.badge}`}>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-100 text-sm truncate">{t.tenantName}</p>
+                        <p className="text-xs text-slate-500 truncate">{t.roomNumber} · Bed {t.bedNumber}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.badge}`}>
                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
                         {cfg.label}
                       </span>
-                    </td>
-                    {canEdit && (
-                      <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                      {canEdit && (
                         <button
                           type="button"
                           onClick={(e) => handleDeleteClick(e, t.id, t.tenantName)}
@@ -777,14 +748,118 @@ export default function TenantBalanceList({ canEdit = true, searchQuery: externa
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Finance grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-slate-900/60 border border-slate-700/40 px-3 py-2">
+                      <p className="text-xs text-slate-500 mb-0.5">Monthly Rent</p>
+                      <p className="text-sm font-semibold text-slate-200 tabular-nums">₱{t.monthlyRent.toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-lg bg-slate-900/60 border border-slate-700/40 px-3 py-2">
+                      <p className="text-xs text-slate-500 mb-0.5">Total Paid</p>
+                      <p className="text-sm font-semibold text-emerald-400 tabular-nums">₱{t.amountPaid.toLocaleString()}</p>
+                    </div>
+                    <div className={`rounded-lg border px-3 py-2 ${t.remainingBalance > 0 ? "bg-rose-500/5 border-rose-500/20" : "bg-slate-900/60 border-slate-700/40"}`}>
+                      <p className="text-xs text-slate-500 mb-0.5">Balance</p>
+                      <p className={`text-sm font-semibold tabular-nums ${t.remainingBalance > 0 ? "text-rose-400" : "text-slate-300"}`}>
+                        ₱{t.remainingBalance.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-slate-900/60 border border-slate-700/40 px-3 py-2">
+                      <p className="text-xs text-slate-500 mb-0.5">Next Due</p>
+                      <p className="text-sm font-semibold text-slate-300">{t.nextDueDate || "—"}</p>
+                    </div>
+                  </div>
+
+                  {t.moveInDate && (
+                    <p className="mt-2.5 text-xs text-slate-600">Move-in: {t.moveInDate}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-700/60 bg-slate-800/50 shadow-lg animate-fade-up">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b border-slate-700/60 bg-slate-800/80">
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Tenant</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Room / Bed</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Move-in</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Rent</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Next Due</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Paid</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Balance</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                  {canEdit && <th className="w-14 px-4 py-3.5" />}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-700/40">
+                {filteredTenants.map((t) => {
+                  const cfg = STATUS_CONFIG[t.status];
+                  return (
+                    <tr
+                      key={t.id}
+                      onClick={() => setEditingTenant(t)}
+                      className={`cursor-pointer transition-colors hover:bg-slate-700/30 ${cfg.row}`}
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-slate-300">
+                              {t.tenantName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="font-medium text-slate-100">{t.tenantName}</span>
+                        </div>
                       </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <td className="px-5 py-4 text-sm text-slate-400">
+                        {t.roomNumber} / Bed {t.bedNumber}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-slate-400">{t.moveInDate || "—"}</td>
+                      <td className="px-5 py-4 text-right tabular-nums text-sm text-slate-300">
+                        ₱{t.monthlyRent.toLocaleString()}
+                      </td>
+                      <td className="px-5 py-4 text-right text-sm text-slate-400">{t.nextDueDate || "—"}</td>
+                      <td className="px-5 py-4 text-right tabular-nums text-sm text-emerald-400 font-medium">
+                        ₱{t.amountPaid.toLocaleString()}
+                      </td>
+                      <td className="px-5 py-4 text-right tabular-nums text-sm font-semibold">
+                        <span className={t.remainingBalance > 0 ? "text-rose-400" : "text-slate-300"}>
+                          ₱{t.remainingBalance.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.badge}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
+                          {cfg.label}
+                        </span>
+                      </td>
+                      {canEdit && (
+                        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteClick(e, t.id, t.tenantName)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                            title="Move to trash"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Trash section */}
