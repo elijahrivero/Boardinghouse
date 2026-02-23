@@ -30,7 +30,7 @@ const STATUS_LABELS: Record<string, string> = {
   due_soon: "Partial",
 };
 
-export default function Dashboard() {
+export default function Dashboard({ onOverdueCountChange }: { onOverdueCountChange?: (count: number) => void } = {}) {
   const [beds, setBeds] = useState<BedSpace[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -199,6 +199,10 @@ export default function Dashboard() {
       overdueTenants,
     };
   }, [activeBeds, searchQuery]);
+
+  useEffect(() => {
+    onOverdueCountChange?.(stats.overdue);
+  }, [stats.overdue, onOverdueCountChange]);
 
   if (loading) {
     return (
