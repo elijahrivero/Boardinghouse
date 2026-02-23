@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import type { BedSpace } from "@/types";
 import { getBedMetrics, getPayments } from "@/lib/boarding";
 
-
 interface BedModalProps {
   bed: BedSpace | Partial<BedSpace>;
   mode: "view" | "edit" | "add";
@@ -15,15 +14,7 @@ interface BedModalProps {
   canEdit: boolean;
 }
 
-export default function BedModal({
-  bed,
-  mode,
-  onClose,
-  onSave,
-  onDelete,
-  saving,
-  canEdit,
-}: BedModalProps) {
+export default function BedModal({ bed, mode, onClose, onSave, onDelete, saving, canEdit }: BedModalProps) {
   const [form, setForm] = useState({
     house: (bed.house ?? "1").toString(),
     roomNumber: (bed.roomNumber ?? "1").toString(),
@@ -70,99 +61,137 @@ export default function BedModal({
     });
   };
 
+  const isOccupied = !!bed.tenantName;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4" onClick={onClose}>
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-stone-200 px-3 sm:px-4 py-3">
-          <h3 className="font-semibold text-stone-900 text-sm sm:text-base">
-            House {form.house} — Room {form.roomNumber} — Bed {form.bedNumber}
-          </h3>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative z-10 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl shadow-black/60 max-h-[92vh] overflow-y-auto animate-fade-in-scale"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-slate-900 border-b border-slate-700/60 px-5 py-4 rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm ${
+              isOccupied
+                ? "bg-indigo-500/15 border border-indigo-500/20 text-indigo-400"
+                : "bg-emerald-500/15 border border-emerald-500/20 text-emerald-400"
+            }`}>
+              {form.bedNumber}
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-100">
+                House {form.house} · Room {form.roomNumber} · Bed {form.bedNumber}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {isOccupied ? `Occupied by ${bed.tenantName}` : "Available"}
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-200 hover:bg-slate-700/60 transition"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
+        {/* Form / View content */}
         {showAddForm ? (
-          <form onSubmit={handleSubmit} className="space-y-4 p-3 sm:p-4">
-            {mode === "edit" ? (
+          <form onSubmit={handleSubmit} className="p-5 space-y-4">
+            {mode === "edit" && (
               <div>
-                <label className="mb-1 block text-sm font-medium text-stone-700">Status</label>
-                <select
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, status: e.target.value as "available" | "occupied" }))
-                  }
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900"
-                >
-                  <option value="available">Available</option>
-                  <option value="occupied">Occupied</option>
-                </select>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Status
+                </label>
+                <div className="flex rounded-xl border border-slate-700 bg-slate-800 overflow-hidden">
+                  {(["available", "occupied"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, status: s }))}
+                      className={`flex-1 py-2.5 text-sm font-medium transition capitalize ${
+                        form.status === s
+                          ? s === "occupied"
+                            ? "bg-indigo-600 text-white"
+                            : "bg-emerald-600 text-white"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : null}
+            )}
+
             {(mode === "add" || form.status === "occupied") && (
               <>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-stone-700">
-                    Tenant Name
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Tenant Name <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
                     value={form.tenantName}
                     onChange={(e) => setForm((f) => ({ ...f, tenantName: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
-                    placeholder="Enter tenant name"
+                    placeholder="Enter full name"
                     required={mode === "add"}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-stone-700">
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Move-in Date
                   </label>
                   <input
                     type="date"
                     value={form.moveInDate}
                     onChange={(e) => setForm((f) => ({ ...f, moveInDate: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-stone-700">
-                    Tenant Phone
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Phone Number
                   </label>
                   <input
                     type="text"
                     value={form.tenantPhone}
                     onChange={(e) => setForm((f) => ({ ...f, tenantPhone: e.target.value }))}
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
                     placeholder="Optional"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-stone-700">Notes</label>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Notes
+                  </label>
                   <textarea
                     value={form.notes}
                     onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                     rows={3}
-                    className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder-stone-500"
                     placeholder="Optional"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition resize-none"
                   />
                 </div>
               </>
             )}
-            <div className="flex flex-col sm:flex-wrap gap-2 border-t border-stone-200 pt-4">
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-slate-700/60">
               {showAddButton && (
                 <button
                   type="submit"
                   disabled={saving || !form.tenantName.trim()}
-                  className="w-full sm:w-auto rounded-lg bg-stone-900 px-4 py-3 sm:py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50 transition-colors"
+                  className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition"
                 >
-                  {saving ? "Adding…" : "Add"}
+                  {saving ? "Adding…" : "Add Tenant"}
                 </button>
               )}
               {!showAddButton && ("id" in bed && bed.id) && (
@@ -170,19 +199,15 @@ export default function BedModal({
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full sm:w-auto rounded-lg bg-stone-900 px-4 py-3 sm:py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50 transition-colors"
+                    className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition"
                   >
-                    {saving ? "Saving…" : "Save"}
+                    {saving ? "Saving…" : "Save Changes"}
                   </button>
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (bed.id) onDelete(bed.id);
-                    }}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (bed.id) onDelete(bed.id); }}
                     disabled={saving}
-                    className="w-full sm:w-auto cursor-pointer rounded-lg bg-rose-600 px-4 py-3 sm:py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                    className="rounded-xl bg-rose-600/80 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50 transition"
                   >
                     Delete
                   </button>
@@ -191,23 +216,27 @@ export default function BedModal({
               <button
                 type="button"
                 onClick={() => (showEditDeleteButtons ? setIsEditing(false) : onClose())}
-                className="w-full sm:w-auto rounded-lg border border-stone-200 px-4 py-3 sm:py-2 text-sm font-medium text-stone-700 transition-colors"
+                className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition"
               >
                 {showEditDeleteButtons ? "Cancel" : "Close"}
               </button>
             </div>
           </form>
         ) : (
-          <div className="space-y-4 p-4">
-            <div className="space-y-3">
-              {form.tenantName ? (
-                <>
-                  <div>
-                    <p className="text-sm text-stone-500">Tenant Name</p>
-                    <p className="font-medium text-stone-900">
-                      {form.tenantName || "—"}
-                    </p>
+          <div className="p-5 space-y-5">
+            {form.tenantName ? (
+              <div className="space-y-3">
+                {[
+                  { label: "Tenant Name", value: form.tenantName },
+                  { label: "Move-in Date", value: form.moveInDate || "—" },
+                  form.tenantPhone ? { label: "Phone", value: form.tenantPhone } : null,
+                  form.notes ? { label: "Notes", value: form.notes } : null,
+                ].filter(Boolean).map((item) => (
+                  <div key={item!.label} className="flex items-start justify-between gap-4 rounded-xl bg-slate-800/50 border border-slate-700/40 px-4 py-3">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider mt-0.5 shrink-0">{item!.label}</p>
+                    <p className="text-sm font-medium text-slate-100 text-right">{item!.value}</p>
                   </div>
+<<<<<<< HEAD
                   <div>
                     <p className="text-sm text-stone-500">Move-in Date</p>
                     <p className="font-medium text-stone-900">
@@ -279,13 +308,30 @@ export default function BedModal({
               )}
             </div>
             <div className="flex flex-wrap gap-2 border-t border-stone-200 pt-4">
+=======
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-4 py-6 text-center">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-emerald-400 font-medium">Bed is available</p>
+                <p className="text-xs text-slate-500 mt-1">Ready for a new tenant</p>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-700/60">
+>>>>>>> 141f5b7fb1eb1fd325712a6c655af0db3e879cb2
               {showAddButton && (
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+                  className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition"
                 >
-                  Add
+                  Add Tenant
                 </button>
               )}
               {showEditDeleteButtons && (
@@ -293,20 +339,16 @@ export default function BedModal({
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+                    className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition"
                   >
                     Edit
                   </button>
                   {"id" in bed && bed.id && (
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (bed.id) onDelete(bed.id);
-                      }}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (bed.id) onDelete(bed.id); }}
                       disabled={saving}
-                      className="cursor-pointer rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xl bg-rose-600/80 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50 transition"
                     >
                       Delete
                     </button>
@@ -314,7 +356,7 @@ export default function BedModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-700"
+                    className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition"
                   >
                     Close
                   </button>
@@ -324,7 +366,7 @@ export default function BedModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+                  className="w-full rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition"
                 >
                   Close
                 </button>

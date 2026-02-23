@@ -86,7 +86,7 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
   const [beds, setBeds] = useState<BedSpace[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedRoom, setExpandedRoom] = useState<string | null>(null);
+  const [expandedRoom, setExpandedRoom] = useState<string | null>(null); // used by default variant
   const [modalBed, setModalBed] = useState<BedSpace | Partial<BedSpace> | null>(null);
   const [modalMode, setModalMode] = useState<"view" | "edit" | "add">("view");
   const [saving, setSaving] = useState(false);
@@ -120,7 +120,7 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
         setBeds(data);
         setError(null);
       },
-      (err) => {
+      () => {
         setError("Could not load bed spaces.");
         setBeds([]);
       }
@@ -134,12 +134,7 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
       setModalBed(bed);
       setModalMode("edit");
     } else {
-      setModalBed({
-        house,
-        roomNumber: room,
-        bedNumber: bedLetter,
-        status: "available",
-      });
+      setModalBed({ house, roomNumber: room, bedNumber: bedLetter, status: "available" });
       setModalMode(canEdit ? "add" : "view");
     }
   }, [canEdit]);
@@ -175,11 +170,7 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
           if (bedData.moveInDate) payload.moveInDate = bedData.moveInDate;
           if (bedData.notes) payload.notes = bedData.notes;
           if (modalMode === "add" && !("id" in data && data.id)) {
-            if (!payload.tenantName) {
-              setError("Tenant name is required.");
-              setSaving(false);
-              return;
-            }
+            if (!payload.tenantName) { setError("Tenant name is required."); setSaving(false); return; }
             await addDoc(collection(db, "beds"), payload);
           } else if ("id" in data && data.id) {
             await updateDoc(doc(db, "beds", data.id), payload);
@@ -193,9 +184,7 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
             saveBedsToStorage(updated);
             setBeds(updated);
           } else if ("id" in data && data.id) {
-            const updated = current.map((b) =>
-              b.id === data.id ? { ...b, ...bedData } : b
-            );
+            const updated = current.map((b) => b.id === data.id ? { ...b, ...bedData } : b);
             saveBedsToStorage(updated);
             setBeds(updated);
           }
@@ -248,10 +237,7 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
     for (let i = 0; i < bedCount; i++) {
       const bedLetter = BED_LABELS[i];
       const bed = getBedBySlot(beds, house, room, bedLetter);
-      if (
-        bedLetter.toLowerCase().includes(q) ||
-        bed?.tenantName?.toLowerCase().includes(q)
-      )
+      if (bedLetter.toLowerCase().includes(q) || bed?.tenantName?.toLowerCase().includes(q))
         return true;
     }
     return false;
@@ -260,108 +246,175 @@ export default function BedSpaceList({ canEdit = false, searchQuery = "", varian
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-stone-300 border-t-stone-600" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-700 border-t-indigo-500" />
       </div>
     );
   }
 
   const isAdmin = variant === "admin";
-  const cardCls = isAdmin
-    ? "overflow-hidden rounded-2xl border border-slate-600/50 bg-slate-800/60 shadow-lg"
-    : "overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm";
-  const headerCls = isAdmin
-    ? "flex w-full items-center justify-between p-5 text-left transition hover:bg-slate-700/30"
-    : "flex w-full items-center justify-between p-4 text-left transition hover:bg-stone-50";
-  const titleCls = isAdmin ? "text-lg font-semibold text-slate-100" : "text-lg font-semibold text-stone-900";
-  const metaCls = isAdmin ? "text-sm text-slate-400" : "text-sm text-stone-500";
-  const expandCls = isAdmin ? "ml-2 text-slate-400 transition" : "ml-2 text-stone-400 transition";
-  const innerCls = isAdmin
-    ? "border-t border-slate-600/50 bg-slate-900/40 p-5"
-    : "border-t border-stone-100 bg-stone-50/50 p-4";
-  const bedCardCls = isAdmin
-    ? "flex items-center justify-between rounded-xl border border-slate-600/50 bg-slate-800/60 p-4 text-left transition hover:border-slate-500 hover:bg-slate-700/40"
-    : "flex items-center justify-between rounded-lg border border-stone-200 bg-white p-3 text-left transition hover:border-stone-300 hover:shadow-sm";
-  const bedTitleCls = isAdmin ? "font-medium text-slate-100" : "font-medium text-stone-900";
-  const bedSubCls = isAdmin ? "ml-1 block text-xs font-normal text-slate-400" : "ml-1 block text-xs font-normal text-stone-500";
-  const badgeOccupiedCls = isAdmin ? "bg-slate-500/30 text-slate-300" : "bg-stone-100 text-stone-600";
-  const badgeAvailableCls = isAdmin ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-800";
 
+  if (!isAdmin) {
+    // Default (non-admin) variant — unchanged styling
+    return (
+      <div className="space-y-4">
+        {error && <p className="rounded-2xl bg-amber-50 px-4 py-2 text-sm text-amber-800">{error}</p>}
+        <div className="space-y-4">
+          {filteredRooms.map(([house, room]) => {
+            const key = `${house}-${room}`;
+            const roomBeds = grouped.get(key) ?? [];
+            const bedCount = ROOM_BED_COUNTS[key] ?? (roomBeds.length || 1);
+            const isExpanded = expandedRoom === key;
+            return (
+              <div key={key} className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setExpandedRoom(isExpanded ? null : key)}
+                  className="flex w-full items-center justify-between p-4 text-left transition hover:bg-stone-50"
+                >
+                  <h2 className="text-lg font-semibold text-stone-900">House {house} — Room {room}</h2>
+                  <span className="flex items-center gap-2">
+                    <span className="text-sm text-stone-500">{bedCount} bed{bedCount !== 1 ? "s" : ""}</span>
+                    <svg className={`w-4 h-4 text-stone-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
+                </button>
+                {isExpanded && (
+                  <div className="border-t border-stone-100 bg-stone-50/50 p-4">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {Array.from({ length: bedCount }, (_, i) => {
+                        const bedLetter = BED_LABELS[i];
+                        const bed = getBedBySlot(beds, house, room, bedLetter);
+                        return (
+                          <button
+                            key={bed?.id ?? `empty-${house}-${room}-${bedLetter}`}
+                            type="button"
+                            onClick={() => handleBedClick(bed ?? null, house, room, bedLetter)}
+                            className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-3 text-left transition hover:border-stone-300 hover:shadow-sm"
+                          >
+                            <span className="font-medium text-stone-900">
+                              Bed {bedLetter}
+                              {bed?.tenantName && <span className="ml-1 block text-xs font-normal text-stone-500">{bed.tenantName}</span>}
+                            </span>
+                            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-sm font-medium ${bed?.tenantName ? "bg-stone-100 text-stone-600" : "bg-emerald-100 text-emerald-800"}`}>
+                              {bed?.tenantName ? "Occupied" : "Available"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {filteredRooms.length === 0 && (
+          <p className="rounded-2xl p-8 text-center text-stone-500">{q ? `No rooms match "${searchQuery}"` : "No rooms configured yet."}</p>
+        )}
+        {modalBed && (
+          <BedModal bed={modalBed} mode={modalMode} onClose={() => setModalBed(null)} onSave={handleSave} onDelete={handleDelete} saving={saving} canEdit={canEdit} />
+        )}
+      </div>
+    );
+  }
+
+  // ── Admin variant — dashboard-style grid ──────────────────────
   return (
     <div className="space-y-4">
       {error && (
-        <p className={`rounded-2xl px-4 py-2 text-sm ${isAdmin ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-800"}`}>
+        <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-sm text-amber-400">
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           {error}
-        </p>
+        </div>
       )}
-      <div className={isAdmin ? "space-y-5" : "space-y-4"}>
-        {filteredRooms.map(([house, room]) => {
-          const key = `${house}-${room}`;
-          const roomBeds = grouped.get(key) ?? [];
-          const bedCount = ROOM_BED_COUNTS[key] ?? (roomBeds.length || 1);
-          const isExpanded = expandedRoom === key;
 
-          return (
-            <div key={key} className={cardCls}>
-              <button
-                type="button"
-                onClick={() => setExpandedRoom(isExpanded ? null : key)}
-                className={headerCls}
-              >
-                <h2 className={titleCls}>
-                  House {house} — Room {room}
-                </h2>
-                <span className="flex items-center gap-2">
-                  <span className={metaCls}>
-                    {bedCount} bed{bedCount !== 1 ? "s" : ""}
-                  </span>
-                  <span className={`${expandCls} ${isExpanded ? "rotate-180" : ""}`}>
-                    ▼
-                  </span>
-                </span>
-              </button>
-              {isExpanded && (
-                <div className={innerCls}>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {Array.from({ length: bedCount }, (_, i) => {
-                      const bedLetter = BED_LABELS[i];
-                      const bed = getBedBySlot(beds, house, room, bedLetter);
-                      return (
-                        <button
-                          key={bed?.id ?? `empty-${house}-${room}-${bedLetter}`}
-                          type="button"
-                          onClick={() => handleBedClick(bed ?? null, house, room, bedLetter)}
-                          className={bedCardCls}
-                        >
-                          <span className={bedTitleCls}>
-                            Bed {bedLetter}
-                            {bed?.tenantName && (
-                              <span className={bedSubCls}>
-                                {bed.tenantName}
-                              </span>
-                            )}
-                          </span>
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-0.5 text-sm font-medium ${
-                              bed?.tenantName ? badgeOccupiedCls : badgeAvailableCls
-                            }`}
-                          >
-                            {bed?.tenantName ? "Occupied" : "Available"}
-                          </span>
-                        </button>
-                      );
-                    })}
+      {filteredRooms.length === 0 ? (
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/40 p-10 text-center">
+          <p className="text-slate-400">
+            {q ? `No rooms match "${searchQuery}"` : "No rooms configured yet."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 stagger-children">
+          {filteredRooms.map(([house, room]) => {
+            const key = `${house}-${room}`;
+            const bedCount = ROOM_BED_COUNTS[key] ?? 1;
+
+            const occupiedCount = Array.from({ length: bedCount }, (_, i) => BED_LABELS[i])
+              .filter((letter) => getBedBySlot(beds, house, room, letter)?.tenantName).length;
+            const availableCount = bedCount - occupiedCount;
+
+            return (
+              <div key={key} className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 shadow-lg animate-fade-up">
+                {/* Room header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-slate-100">
+                      House {house} — Room {room}
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">{bedCount} bed{bedCount !== 1 ? "s" : ""}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {occupiedCount > 0 && (
+                      <span className="rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-400">
+                        {occupiedCount} occ.
+                      </span>
+                    )}
+                    {availableCount > 0 && (
+                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-400">
+                        {availableCount} open
+                      </span>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
 
-      {filteredRooms.length === 0 && (
-        <p className={`rounded-2xl p-8 text-center ${isAdmin ? "text-slate-400" : "text-stone-500"}`}>
-          {q ? `No rooms match "${searchQuery}"` : "No rooms configured yet."}
-        </p>
+                {/* Bed buttons */}
+                <div className="space-y-2">
+                  {Array.from({ length: bedCount }, (_, i) => {
+                    const bedLetter = BED_LABELS[i];
+                    const bed = getBedBySlot(beds, house, room, bedLetter);
+                    const isOccupied = !!bed?.tenantName;
+
+                    return (
+                      <button
+                        key={bed?.id ?? `empty-${house}-${room}-${bedLetter}`}
+                        type="button"
+                        onClick={() => handleBedClick(bed ?? null, house, room, bedLetter)}
+                        className={`w-full group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] ${
+                          isOccupied
+                            ? "border-slate-600/50 bg-slate-900/50 hover:border-slate-500/60 hover:bg-slate-800/70"
+                            : "border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/30 hover:bg-emerald-500/10"
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
+                          isOccupied ? "bg-slate-700/80 text-slate-300" : "bg-emerald-500/15 text-emerald-400"
+                        }`}>
+                          {bedLetter}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${isOccupied ? "text-slate-100" : "text-emerald-400"}`}>
+                            {isOccupied ? bed!.tenantName : "Available"}
+                          </p>
+                          <p className="text-xs text-slate-500">Bed {bedLetter}</p>
+                        </div>
+                        <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
+                          isOccupied
+                            ? "bg-slate-700/60 text-slate-400"
+                            : "bg-emerald-500/15 text-emerald-400"
+                        }`}>
+                          {isOccupied ? "Occupied" : "Empty"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {modalBed && (
