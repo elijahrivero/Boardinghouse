@@ -236,80 +236,54 @@ export default function BedModal({ bed, mode, onClose, onSave, onDelete, saving,
                     <p className="text-xs text-slate-500 uppercase tracking-wider mt-0.5 shrink-0">{item!.label}</p>
                     <p className="text-sm font-medium text-slate-100 text-right">{item!.value}</p>
                   </div>
-<<<<<<< HEAD
-                  <div>
-                    <p className="text-sm text-stone-500">Move-in Date</p>
-                    <p className="font-medium text-stone-900">
-                      {form.moveInDate || "—"}
-                    </p>
-                  </div>
-                  {form.tenantPhone && (
-                    <div>
-                      <p className="text-sm text-stone-500">Phone</p>
-                      <p className="font-medium text-stone-900">{form.tenantPhone}</p>
+                ))}
+                
+                {/* Payment Details Section */}
+                {paymentDetails && mode === "view" && (
+                  <div className="mt-6 space-y-3 border-t border-stone-200 pt-4">
+                    <h4 className="text-base font-semibold text-stone-900 mb-3">Payment Details</h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-stone-500">Monthly Rent</p>
+                        <p className="font-medium text-stone-900">₱{paymentDetails.monthlyRent?.toLocaleString() || "0"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-stone-500">Payment Status</p>
+                        <p className={`font-medium ${
+                          paymentDetails.status === "paid" ? "text-emerald-600" :
+                          paymentDetails.status === "due_soon" ? "text-amber-600" :
+                          "text-rose-600"
+                        }`}>
+                          {paymentDetails.status === "paid" && "Paid"}
+                          {paymentDetails.status === "due_soon" && `Due: ${paymentDetails.nextDueDate}`}
+                          {paymentDetails.status === "overdue" && `Overdue: ₱${paymentDetails.remainingBalance.toLocaleString()}`}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  {form.notes && (
-                    <div>
-                      <p className="text-sm text-stone-500">Notes</p>
-                      <p className="font-medium text-stone-900">{form.notes}</p>
-                    </div>
-                  )}
-                  
-                  {/* Payment Details Section */}
-                  {paymentDetails && mode === "view" && (
-                    <div className="mt-6 space-y-3 border-t border-stone-200 pt-4">
-                      <h4 className="text-base font-semibold text-stone-900 mb-3">Payment Details</h4>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-stone-500">Monthly Rent</p>
-                          <p className="font-medium text-stone-900">₱{paymentDetails.monthlyRent?.toLocaleString() || "0"}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-stone-500">Payment Status</p>
-                          <p className={`font-medium ${
-                            paymentDetails.status === "paid" ? "text-emerald-600" :
-                            paymentDetails.status === "due_soon" ? "text-amber-600" :
-                            "text-rose-600"
-                          }`}>
-                            {paymentDetails.status === "paid" && "Paid"}
-                            {paymentDetails.status === "due_soon" && `Due: ${paymentDetails.nextDueDate}`}
-                            {paymentDetails.status === "overdue" && `Overdue: ₱${paymentDetails.remainingBalance.toLocaleString()}`}
-                          </p>
+                    
+                    {paymentDetails.remainingBalance > 0 && (
+                      <div>
+                        <p className="text-sm text-stone-500">Remaining Balance</p>
+                        <p className="font-medium text-rose-600">₱{paymentDetails.remainingBalance.toLocaleString()}</p>
+                      </div>
+                    )}
+                    
+                    {payments.length > 0 && (
+                      <div>
+                        <p className="text-sm text-stone-500 mb-2">Recent Payments</p>
+                        <div className="space-y-2">
+                          {payments.slice(-3).reverse().map((payment, index) => (
+                            <div key={index} className="flex justify-between text-sm p-2 bg-stone-50 rounded">
+                              <span className="text-stone-600">{payment.date}</span>
+                              <span className="font-medium text-stone-900">₱{payment.amount.toLocaleString()}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      
-                      {paymentDetails.remainingBalance > 0 && (
-                        <div>
-                          <p className="text-sm text-stone-500">Remaining Balance</p>
-                          <p className="font-medium text-rose-600">₱{paymentDetails.remainingBalance.toLocaleString()}</p>
-                        </div>
-                      )}
-                      
-                      {payments.length > 0 && (
-                        <div>
-                          <p className="text-sm text-stone-500 mb-2">Recent Payments</p>
-                          <div className="space-y-2">
-                            {payments.slice(-3).reverse().map((payment, index) => (
-                              <div key={index} className="flex justify-between text-sm p-2 bg-stone-50 rounded">
-                                <span className="text-stone-600">{payment.date}</span>
-                                <span className="font-medium text-stone-900">₱{payment.amount.toLocaleString()}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-stone-600">This bed is available.</p>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2 border-t border-stone-200 pt-4">
-=======
-                ))}
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-4 py-6 text-center">
@@ -322,56 +296,58 @@ export default function BedModal({ bed, mode, onClose, onSave, onDelete, saving,
                 <p className="text-xs text-slate-500 mt-1">Ready for a new tenant</p>
               </div>
             )}
+          </div>
+        )}
 
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-700/60">
->>>>>>> 141f5b7fb1eb1fd325712a6c655af0db3e879cb2
-              {showAddButton && (
+        {/* Action buttons for view mode */}
+        {!showAddForm && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-700/60">
+            {showAddButton && (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition"
+              >
+                Add Tenant
+              </button>
+            )}
+            {showEditDeleteButtons && (
+              <>
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
                   className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition"
                 >
-                  Add Tenant
+                  Edit
                 </button>
-              )}
-              {showEditDeleteButtons && (
-                <>
+                {"id" in bed && bed.id && (
                   <button
                     type="button"
-                    onClick={() => setIsEditing(true)}
-                    className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (bed.id) onDelete(bed.id); }}
+                    disabled={saving}
+                    className="rounded-xl bg-rose-600/80 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50 transition"
                   >
-                    Edit
+                    Delete
                   </button>
-                  {"id" in bed && bed.id && (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (bed.id) onDelete(bed.id); }}
-                      disabled={saving}
-                      className="rounded-xl bg-rose-600/80 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50 transition"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition"
-                  >
-                    Close
-                  </button>
-                </>
-              )}
-              {!showAddButton && !showEditDeleteButtons && (
+                )}
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition"
+                  className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition"
                 >
                   Close
                 </button>
-              )}
-            </div>
+              </>
+            )}
+            {!showAddButton && !showEditDeleteButtons && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition"
+              >
+                Close
+              </button>
+            )}
           </div>
         )}
       </div>
