@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Boarding House",
-  description: "Bed space availability and tenant balance",
+  title: "RiveroBH",
+  description: "Bed space availability and tenant balance management",
 };
 
 export const viewport: Viewport = {

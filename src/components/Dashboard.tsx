@@ -266,11 +266,14 @@ export default function Dashboard({ onOverdueCountChange }: { onOverdueCountChan
               } else if (label === "Available") {
                 setDetailsModal({
                   type: "Available Beds", 
-                  data: activeBeds.filter(b => !b.tenantName).map(bed => ({
-                    house: bed.house,
-                    room: bed.roomNumber,
-                    bed: bed.bedNumber
-                  }))
+                  data: {
+                    count: stats.available,
+                    beds: activeBeds.filter(b => !b.tenantName).map(bed => ({
+                      house: bed.house,
+                      room: bed.roomNumber,
+                      bed: bed.bedNumber
+                    }))
+                  }
                 });
               } else if (label === "Overdue") {
                 setDetailsModal({
@@ -565,18 +568,22 @@ export default function Dashboard({ onOverdueCountChange }: { onOverdueCountChan
 
               {detailsModal.type === "Occupied Beds" && (
                 <div>
-                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-100 mb-2">Occupied Beds ({detailsModal.data.length})</h4>
+                  <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <h4 className="text-lg font-medium text-blue-400 mb-2">Occupied Beds</h4>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-3xl font-bold text-blue-300">{detailsModal.data.length}</p>
+                      <p className="text-sm text-blue-400/70">beds currently occupied</p>
+                    </div>
                   </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {detailsModal.data.map((bed: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-slate-700/40 rounded-lg text-sm">
+                      <div key={index} className="flex justify-between items-center p-3 bg-slate-700/40 border border-blue-500/20 rounded-lg text-sm">
                         <div>
-                          <p className="font-medium text-slate-100">{bed.tenantName}</p>
+                          <p className="font-medium text-blue-400">{bed.tenantName}</p>
                           <p className="text-slate-400">House {bed.house} • Room {bed.room} • Bed {bed.bed}</p>
                         </div>
                         <div className="text-right">
-                          <span className="font-medium text-slate-100">₱{bed.rent?.toLocaleString()}</span>
+                          <span className="font-medium text-blue-400">₱{bed.rent?.toLocaleString()}</span>
                         </div>
                       </div>
                     ))}
@@ -586,20 +593,34 @@ export default function Dashboard({ onOverdueCountChange }: { onOverdueCountChan
 
               {detailsModal.type === "Available Beds" && (
                 <div>
-                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-100 mb-2">Available Beds ({detailsModal.data.length})</h4>
+                  <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                    <h4 className="text-lg font-medium text-emerald-400 mb-2">Available Beds</h4>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-3xl font-bold text-emerald-300">{detailsModal.data.count}</p>
+                      <p className="text-sm text-emerald-400/70">beds ready for tenants</p>
+                    </div>
                   </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {detailsModal.data.map((bed: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-slate-700/40 rounded-lg text-sm">
-                        <div>
-                          <span className="text-slate-300">House {bed.house} • Room {bed.room} • Bed {bed.bed}</span>
+                    {detailsModal.data.count > 0 ? (
+                      detailsModal.data.beds.map((bed: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center p-3 bg-slate-700/40 rounded-lg text-sm">
+                          <div>
+                            <span className="text-slate-300">House {bed.house} • Room {bed.room} • Bed {bed.bed}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-emerald-400 font-medium">Available</span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-emerald-400 font-medium">Available</span>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-slate-400">
+                        <svg className="w-12 h-12 mx-auto mb-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />
+                        </svg>
+                        <p className="text-sm">No available beds at the moment</p>
+                        <p className="text-xs text-slate-500 mt-1">All beds are currently occupied</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}

@@ -2,7 +2,7 @@ import type { BedSpace, PaymentRecord, TenantPaymentStatus } from "@/types";
 import { ROOM_BED_COUNTS } from "@/types";
 
 const BED_LABELS = "ABCDEFGH".split("");
-const STORAGE_KEY = "boardinghouse-beds";
+const STORAGE_KEY = "riverobh-beds";
 
 export function loadBedsFromStorage(): BedSpace[] {
   if (typeof window === "undefined") return [];

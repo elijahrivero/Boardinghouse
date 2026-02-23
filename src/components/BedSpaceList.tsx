@@ -16,7 +16,7 @@ import { ROOM_BED_COUNTS } from "@/types";
 import BedModal from "./BedModal";
 
 const BED_LABELS = "ABCDEFGH".split("");
-const STORAGE_KEY = "boardinghouse-beds";
+const STORAGE_KEY = "riverobh-beds";
 
 function loadBedsFromStorage(): BedSpace[] {
   if (typeof window === "undefined") return [];

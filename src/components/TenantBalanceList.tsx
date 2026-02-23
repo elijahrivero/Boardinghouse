@@ -5,7 +5,7 @@ import { collection, doc, deleteDoc, updateDoc, onSnapshot, serverTimestamp } fr
 import { db, getFirebaseStatus } from "@/lib/firebase";
 import type { BedSpace, TenantBalance, TenantPaymentStatus, PaymentRecord } from "@/types";
 
-const STORAGE_KEY = "boardinghouse-beds";
+const STORAGE_KEY = "riverobh-beds";
 
 function loadBedsFromStorage(): BedSpace[] {
   if (typeof window === "undefined") return [];
