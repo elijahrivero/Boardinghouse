@@ -450,11 +450,6 @@ export default function Dashboard() {
                           ? STATUS_LABELS[metrics?.status ?? "paid"]
                           : "Available"}
                       </span>
-                      {metrics?.nextDueDate && (
-                        <p className="text-slate-500 text-xs mt-1">
-                          📅 Due: {metrics.nextDueDate}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>

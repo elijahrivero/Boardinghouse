@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { BedSpace } from "@/types";
+import { getBedMetrics, getPayments } from "@/lib/boarding";
 
 
 interface BedModalProps {
@@ -34,6 +35,10 @@ export default function BedModal({
     notes: bed.notes ?? "",
   });
   const [isEditing, setIsEditing] = useState(mode === "add");
+  
+  // Calculate payment details for occupied beds
+  const paymentDetails = bed.id ? getBedMetrics(bed as BedSpace) : null;
+  const payments = bed.id ? getPayments(bed as BedSpace) : [];
 
   const showAddButton = mode === "add";
   const showEditDeleteButtons = ("id" in bed && bed.id) && canEdit;
@@ -219,6 +224,53 @@ export default function BedModal({
                     <div>
                       <p className="text-sm text-stone-500">Notes</p>
                       <p className="font-medium text-stone-900">{form.notes}</p>
+                    </div>
+                  )}
+                  
+                  {/* Payment Details Section */}
+                  {paymentDetails && mode === "view" && (
+                    <div className="mt-6 space-y-3 border-t border-stone-200 pt-4">
+                      <h4 className="text-base font-semibold text-stone-900 mb-3">Payment Details</h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-stone-500">Monthly Rent</p>
+                          <p className="font-medium text-stone-900">₱{paymentDetails.monthlyRent?.toLocaleString() || "0"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-stone-500">Payment Status</p>
+                          <p className={`font-medium ${
+                            paymentDetails.status === "paid" ? "text-emerald-600" :
+                            paymentDetails.status === "due_soon" ? "text-amber-600" :
+                            "text-rose-600"
+                          }`}>
+                            {paymentDetails.status === "paid" && "Paid"}
+                            {paymentDetails.status === "due_soon" && `Due: ${paymentDetails.nextDueDate}`}
+                            {paymentDetails.status === "overdue" && `Overdue: ₱${paymentDetails.remainingBalance.toLocaleString()}`}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {paymentDetails.remainingBalance > 0 && (
+                        <div>
+                          <p className="text-sm text-stone-500">Remaining Balance</p>
+                          <p className="font-medium text-rose-600">₱{paymentDetails.remainingBalance.toLocaleString()}</p>
+                        </div>
+                      )}
+                      
+                      {payments.length > 0 && (
+                        <div>
+                          <p className="text-sm text-stone-500 mb-2">Recent Payments</p>
+                          <div className="space-y-2">
+                            {payments.slice(-3).reverse().map((payment, index) => (
+                              <div key={index} className="flex justify-between text-sm p-2 bg-stone-50 rounded">
+                                <span className="text-stone-600">{payment.date}</span>
+                                <span className="font-medium text-stone-900">₱{payment.amount.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
