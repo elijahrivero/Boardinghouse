@@ -221,17 +221,17 @@ export default function Dashboard({ onOverdueCountChange }: { onOverdueCountChan
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5 stagger-children animate-fade-up">
         {[
-          { label: "Tenants", value: stats.totalTenants, icon: "users" },
-          { label: "Total Beds", value: stats.totalBeds, icon: "bed" },
-          { label: "Occupied", value: stats.occupied, icon: "check-circle" },
-          { label: "Available", value: stats.available, icon: "home" },
-          { label: "Overdue", value: stats.overdue, icon: "exclamation-triangle" },
-        ].map(({ label, value, icon }) => (
+          { label: "Tenants", value: stats.totalTenants, color: "indigo", icon: "users" },
+          { label: "Total Beds", value: stats.totalBeds, color: "slate", icon: "bed" },
+          { label: "Occupied", value: stats.occupied, color: "blue", icon: "check-circle" },
+          { label: "Available", value: stats.available, color: "emerald", icon: "home" },
+          { label: "Overdue", value: stats.overdue, color: "rose", icon: "exclamation-triangle" },
+        ].map(({ label, value, color, icon }) => (
           <div
             key={label}
-            className="group rounded-xl border border-slate-700/50 bg-slate-800/50 p-3 sm:p-4 shadow-lg backdrop-blur transition hover:border-slate-600/50 hover:bg-slate-800/70 cursor-pointer"
+            className={`rounded-xl border border-${color}-500/20 bg-${color}-500/5 p-4 cursor-pointer transition-all duration-200 hover:border-${color}-500/30 hover:bg-${color}-500/10 hover:scale-[1.02]`}
             title={`Click to view details about ${label.toLowerCase()}`}
             onClick={() => {
               if (label === "Tenants") {
@@ -264,31 +264,13 @@ export default function Dashboard({ onOverdueCountChange }: { onOverdueCountChan
                   }))
                 });
               } else if (label === "Available") {
-                const availableSlots: { house: string; room: string; bed: string }[] = [];
-                for (const [h, r] of ROOM_ORDER) {
-                  const k = `${h}-${r}`;
-                  const count = ROOM_BED_COUNTS[k] ?? 1;
-                  for (let i = 0; i < count; i++) {
-                    const bl = BED_LABELS[i];
-                    const b = getBedBySlot(activeBeds, h, r, bl);
-                    if (!b?.tenantName) availableSlots.push({ house: h, room: r, bed: bl });
-                  }
-                }
                 setDetailsModal({
-                  type: "Available Beds",
-                  data: availableSlots,
-                });
-              } else if (label === "Monthly Income") {
-                setDetailsModal({
-                  type: "Monthly Income",
-                  data: {
-                    total: monthlyIncome,
-                    perTenant: stats.totalTenants > 0 ? Math.round(monthlyIncome / stats.totalTenants) : 0,
-                    sources: activeBeds.filter(b => b.tenantName).map(bed => ({
-                      tenantName: bed.tenantName,
-                      monthlyRent: bed.monthlyRent
-                    }))
-                  }
+                  type: "Available Beds", 
+                  data: activeBeds.filter(b => !b.tenantName).map(bed => ({
+                    house: bed.house,
+                    room: bed.roomNumber,
+                    bed: bed.bedNumber
+                  }))
                 });
               } else if (label === "Overdue") {
                 setDetailsModal({
@@ -305,30 +287,26 @@ export default function Dashboard({ onOverdueCountChange }: { onOverdueCountChan
               }
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {icon === "users" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 8 4 4 0 008-4 4 4 0 00-8 4zM4 12a8 8 0 018 8 8 8 0 01-8-8z" />}
-                {icon === "bed" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />}
-                {icon === "check-circle" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                {icon === "home" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />}
-                {icon === "currency-dollar" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 3 3 3 .895 3 3-3 1.657 0 3-.895 3-3z" />}
-                {icon === "exclamation-triangle" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 2.502-1.908 0-.153-.015-.345-.015-.508 0-.214.015-.459.015-.637 0-.577-.015-.939.015-1.511 0-.807-.015-1.466.015-2.043 0-1.755-.015-3.255.015-4.71 0-2.773 1.702-4.746 4.746-4.746 1.326 0 2.553 1.702 4.746 4.746 4.746 0 0 1.326-1.702 4.746-4.746z" />}
-              </svg>
-              <p className="text-xs sm:text-sm font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
-                {label}
-              </p>
+            <div className="flex items-center justify-between mb-3">
+              <p className={`text-xs font-medium text-${color}-500/70 uppercase tracking-wider`}>{label}</p>
+              <div className={`w-7 h-7 rounded-lg bg-${color}-500/10 flex items-center justify-center`}>
+                <svg className={`w-3.5 h-3.5 text-${color}-400`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {icon === "users" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 8 4 4 0 008-4 4 4 0 00-8 4zM4 12a8 8 0 018 8 8 8 0 01-8-8z" />}
+                  {icon === "bed" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />}
+                  {icon === "check-circle" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                  {icon === "home" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />}
+                  {icon === "exclamation-triangle" && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                </svg>
+              </div>
             </div>
-            <p className="text-xl sm:text-2xl font-semibold text-slate-100">
-              {value}
+            <p className={`text-2xl font-bold text-${color}-300`}>{value}</p>
+            <p className={`text-xs text-${color}-600/70 mt-1`}>
+              {label === "Tenants" && "Active tenants"}
+              {label === "Total Beds" && "All bed slots"}
+              {label === "Occupied" && "Active tenants"}
+              {label === "Available" && "Open beds"}
+              {label === "Overdue" && "Overdue payments"}
             </p>
-            <div className="mt-2 text-xs text-slate-500">
-              {label === "Tenants" && "Total number of tenants"}
-              {label === "Total Beds" && "Total number of beds across all rooms"}
-              {label === "Occupied" && "Beds currently occupied by tenants"}
-              {label === "Available" && "Beds ready for new tenants"}
-              {label === "Monthly Income" && "Expected monthly rent collection"}
-              {label === "Overdue" && "Tenants with overdue payments"}
-            </div>
           </div>
         ))}
       </div>

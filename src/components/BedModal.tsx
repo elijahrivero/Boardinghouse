@@ -233,27 +233,27 @@ export default function BedModal({ bed, mode, onClose, onSave, onDelete, saving,
                   form.notes ? { label: "Notes", value: form.notes } : null,
                 ].filter(Boolean).map((item) => (
                   <div key={item!.label} className="flex items-start justify-between gap-4 rounded-xl bg-slate-800/50 border border-slate-700/40 px-4 py-3">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider mt-0.5 shrink-0">{item!.label}</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mt-0.5 shrink-0">{item!.label}</p>
                     <p className="text-sm font-medium text-slate-100 text-right">{item!.value}</p>
                   </div>
                 ))}
                 
                 {/* Payment Details Section */}
                 {paymentDetails && mode === "view" && (
-                  <div className="mt-6 space-y-3 border-t border-stone-200 pt-4">
-                    <h4 className="text-base font-semibold text-stone-900 mb-3">Payment Details</h4>
+                  <div className="mt-6 space-y-3 border-t border-slate-700/60 pt-4">
+                    <h4 className="text-base font-semibold text-slate-100 mb-3">Payment Details</h4>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-stone-500">Monthly Rent</p>
-                        <p className="font-medium text-stone-900">₱{paymentDetails.monthlyRent?.toLocaleString() || "0"}</p>
+                        <p className="text-sm text-slate-400">Monthly Rent</p>
+                        <p className="font-medium text-slate-100">₱{paymentDetails.monthlyRent?.toLocaleString() || "0"}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-stone-500">Payment Status</p>
+                        <p className="text-sm text-slate-400">Payment Status</p>
                         <p className={`font-medium ${
-                          paymentDetails.status === "paid" ? "text-emerald-600" :
-                          paymentDetails.status === "due_soon" ? "text-amber-600" :
-                          "text-rose-600"
+                          paymentDetails.status === "paid" ? "text-emerald-400" :
+                          paymentDetails.status === "due_soon" ? "text-amber-400" :
+                          "text-rose-400"
                         }`}>
                           {paymentDetails.status === "paid" && "Paid"}
                           {paymentDetails.status === "due_soon" && `Due: ${paymentDetails.nextDueDate}`}
@@ -264,19 +264,19 @@ export default function BedModal({ bed, mode, onClose, onSave, onDelete, saving,
                     
                     {paymentDetails.remainingBalance > 0 && (
                       <div>
-                        <p className="text-sm text-stone-500">Remaining Balance</p>
-                        <p className="font-medium text-rose-600">₱{paymentDetails.remainingBalance.toLocaleString()}</p>
+                        <p className="text-sm text-slate-400">Remaining Balance</p>
+                        <p className="font-medium text-rose-400">₱{paymentDetails.remainingBalance.toLocaleString()}</p>
                       </div>
                     )}
                     
                     {payments.length > 0 && (
                       <div>
-                        <p className="text-sm text-stone-500 mb-2">Recent Payments</p>
+                        <p className="text-sm text-slate-400 mb-2">Recent Payments</p>
                         <div className="space-y-2">
                           {payments.slice(-3).reverse().map((payment, index) => (
-                            <div key={index} className="flex justify-between text-sm p-2 bg-stone-50 rounded">
-                              <span className="text-stone-600">{payment.date}</span>
-                              <span className="font-medium text-stone-900">₱{payment.amount.toLocaleString()}</span>
+                            <div key={index} className="flex justify-between text-sm p-2 bg-slate-800/50 rounded">
+                              <span className="text-slate-400">{payment.date}</span>
+                              <span className="font-medium text-slate-100">₱{payment.amount.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
