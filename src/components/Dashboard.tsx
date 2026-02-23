@@ -260,13 +260,19 @@ export default function Dashboard() {
                   }))
                 });
               } else if (label === "Available") {
+                const availableSlots: { house: string; room: string; bed: string }[] = [];
+                for (const [h, r] of ROOM_ORDER) {
+                  const k = `${h}-${r}`;
+                  const count = ROOM_BED_COUNTS[k] ?? 1;
+                  for (let i = 0; i < count; i++) {
+                    const bl = BED_LABELS[i];
+                    const b = getBedBySlot(activeBeds, h, r, bl);
+                    if (!b?.tenantName) availableSlots.push({ house: h, room: r, bed: bl });
+                  }
+                }
                 setDetailsModal({
-                  type: "Available Beds", 
-                  data: activeBeds.filter(b => !b.tenantName).map(bed => ({
-                    house: bed.house,
-                    room: bed.roomNumber,
-                    bed: bed.bedNumber
-                  }))
+                  type: "Available Beds",
+                  data: availableSlots,
                 });
               } else if (label === "Monthly Income") {
                 setDetailsModal({
@@ -311,7 +317,7 @@ export default function Dashboard() {
             <p className="text-xl sm:text-2xl font-semibold text-slate-100">
               {value}
             </p>
-            <div className="mt-2 text-xs text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="mt-2 text-xs text-slate-500">
               {label === "Tenants" && "Total number of tenants"}
               {label === "Total Beds" && "Total number of beds across all rooms"}
               {label === "Occupied" && "Beds currently occupied by tenants"}
@@ -516,15 +522,15 @@ export default function Dashboard() {
       {/* Details Modal */}
       {detailsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDetailsModal(null)}>
-          <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl p-6">
+          <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-slate-800 border border-slate-700 shadow-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-slate-900">
+              <h3 className="text-xl font-semibold text-slate-100">
                 {detailsModal.type} Details
               </h3>
               <button
                 type="button"
                 onClick={() => setDetailsModal(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-200"
               >
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="h-6 w-6">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -536,17 +542,17 @@ export default function Dashboard() {
             <div className="space-y-4">
               {detailsModal.type === "Tenants" && (
                 <div>
-                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Total Tenants: {detailsModal.data.total}</h4>
-                    <p className="text-sm text-slate-600">Active tenants in the boarding house</p>
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-100 mb-2">Total Tenants: {detailsModal.data.total}</h4>
+                    <p className="text-sm text-slate-400">Active tenants in the boarding house</p>
                   </div>
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Breakdown</h4>
+                  <div className="p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-100 mb-2">Breakdown</h4>
                     <div className="space-y-2">
                       {detailsModal.data.breakdown.map((tenant: any, index: number) => (
                         <div key={index} className="flex justify-between text-sm">
-                          <span className="text-slate-600">{tenant.tenantName}</span>
-                          <span className="font-medium">House {tenant.house} • Room {tenant.roomNumber} • Bed {tenant.bedNumber}</span>
+                          <span className="text-slate-300">{tenant.tenantName}</span>
+                          <span className="font-medium text-slate-200">House {tenant.house} • Room {tenant.roomNumber} • Bed {tenant.bedNumber}</span>
                         </div>
                       ))}
                     </div>
@@ -556,24 +562,24 @@ export default function Dashboard() {
 
               {detailsModal.type === "Total Beds" && (
                 <div>
-                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Occupancy Overview</h4>
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-100 mb-2">Occupancy Overview</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-slate-600">Total Beds:</span>
-                        <span className="font-medium">{detailsModal.data.total}</span>
+                        <p className="text-slate-400">Total Beds</p>
+                        <p className="font-semibold text-slate-100 text-lg">{detailsModal.data.total}</p>
                       </div>
                       <div>
-                        <span className="text-slate-600">Occupied:</span>
-                        <span className="font-medium">{detailsModal.data.occupied}</span>
+                        <p className="text-slate-400">Occupied</p>
+                        <p className="font-semibold text-slate-100 text-lg">{detailsModal.data.occupied}</p>
                       </div>
                       <div>
-                        <span className="text-slate-600">Available:</span>
-                        <span className="font-medium">{detailsModal.data.available}</span>
+                        <p className="text-slate-400">Available</p>
+                        <p className="font-semibold text-emerald-400 text-lg">{detailsModal.data.available}</p>
                       </div>
                       <div>
-                        <span className="text-slate-600">Occupancy Rate:</span>
-                        <span className="font-medium">{detailsModal.data.occupancyRate}%</span>
+                        <p className="text-slate-400">Occupancy Rate</p>
+                        <p className="font-semibold text-slate-100 text-lg">{detailsModal.data.occupancyRate}%</p>
                       </div>
                     </div>
                   </div>
@@ -582,18 +588,18 @@ export default function Dashboard() {
 
               {detailsModal.type === "Occupied Beds" && (
                 <div>
-                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Occupied Beds ({detailsModal.data.length})</h4>
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-100 mb-2">Occupied Beds ({detailsModal.data.length})</h4>
                   </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {detailsModal.data.map((bed: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg text-sm">
+                      <div key={index} className="flex justify-between items-center p-3 bg-slate-700/40 rounded-lg text-sm">
                         <div>
-                          <span className="font-medium text-slate-900">{bed.tenantName}</span>
-                          <span className="text-slate-600">House {bed.house} • Room {bed.roomNumber} • Bed {bed.bedNumber}</span>
+                          <p className="font-medium text-slate-100">{bed.tenantName}</p>
+                          <p className="text-slate-400">House {bed.house} • Room {bed.room} • Bed {bed.bed}</p>
                         </div>
                         <div className="text-right">
-                          <span className="font-medium text-slate-900">₱{bed.rent?.toLocaleString()}</span>
+                          <span className="font-medium text-slate-100">₱{bed.rent?.toLocaleString()}</span>
                         </div>
                       </div>
                     ))}
@@ -603,17 +609,17 @@ export default function Dashboard() {
 
               {detailsModal.type === "Available Beds" && (
                 <div>
-                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Available Beds ({detailsModal.data.length})</h4>
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-100 mb-2">Available Beds ({detailsModal.data.length})</h4>
                   </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {detailsModal.data.map((bed: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg text-sm">
+                      <div key={index} className="flex justify-between items-center p-3 bg-slate-700/40 rounded-lg text-sm">
                         <div>
-                          <span className="text-slate-600">House {bed.house} • Room {bed.roomNumber} • Bed {bed.bedNumber}</span>
+                          <span className="text-slate-300">House {bed.house} • Room {bed.room} • Bed {bed.bed}</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-green-600 font-medium">Available</span>
+                          <span className="text-emerald-400 font-medium">Available</span>
                         </div>
                       </div>
                     ))}
@@ -623,26 +629,26 @@ export default function Dashboard() {
 
               {detailsModal.type === "Monthly Income" && (
                 <div>
-                  <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Income Overview</h4>
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-100 mb-3">Income Overview</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-slate-600">Total Monthly Income:</span>
-                        <span className="font-medium text-lg">₱{detailsModal.data.total.toLocaleString()}</span>
+                        <p className="text-slate-400">Total Monthly Income</p>
+                        <p className="font-semibold text-slate-100 text-lg">₱{detailsModal.data.total.toLocaleString()}</p>
                       </div>
                       <div>
-                        <span className="text-slate-600">Per Tenant Average:</span>
-                        <span className="font-medium">₱{detailsModal.data.perTenant.toLocaleString()}</span>
+                        <p className="text-slate-400">Per Tenant Average</p>
+                        <p className="font-semibold text-slate-100 text-lg">₱{detailsModal.data.perTenant.toLocaleString()}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Income Sources</h4>
+                  <div className="p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-lg font-medium text-slate-100 mb-2">Income Sources</h4>
                     <div className="space-y-2">
                       {detailsModal.data.sources.map((source: any, index: number) => (
                         <div key={index} className="flex justify-between text-sm">
-                          <span className="text-slate-600">{source.tenantName}</span>
-                          <span className="font-medium">₱{source.monthlyRent?.toLocaleString()}/month</span>
+                          <span className="text-slate-300">{source.tenantName}</span>
+                          <span className="font-medium text-slate-200">₱{source.monthlyRent?.toLocaleString()}/month</span>
                         </div>
                       ))}
                     </div>
@@ -652,31 +658,31 @@ export default function Dashboard() {
 
               {detailsModal.type === "Overdue Tenants" && (
                 <div>
-                  <div className="mb-4 p-4 bg-rose-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-rose-900 mb-2">Overdue Summary</h4>
+                  <div className="mb-4 p-4 bg-rose-500/20 border border-rose-500/30 rounded-lg">
+                    <h4 className="text-lg font-medium text-rose-300 mb-2">Overdue Summary</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-rose-600">Total Overdue:</span>
-                        <span className="font-medium text-lg">₱{detailsModal.data.reduce((sum: number, tenant: any) => sum + tenant.remainingBalance, 0).toLocaleString()}</span>
+                        <p className="text-rose-400">Total Overdue Balance</p>
+                        <p className="font-semibold text-rose-200 text-lg">₱{detailsModal.data.reduce((sum: number, tenant: any) => sum + tenant.remainingBalance, 0).toLocaleString()}</p>
                       </div>
                       <div>
-                        <span className="text-rose-600">Tenants Overdue:</span>
-                        <span className="font-medium">{detailsModal.data.length}</span>
+                        <p className="text-rose-400">Tenants Overdue</p>
+                        <p className="font-semibold text-rose-200 text-lg">{detailsModal.data.length}</p>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {detailsModal.data.map((tenant: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-rose-50 rounded-lg text-sm">
+                      <div key={index} className="flex justify-between items-center p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-sm">
                         <div>
-                          <span className="font-medium text-rose-900">{tenant.tenantName}</span>
-                          <span className="text-rose-600">House {tenant.house} • Room {tenant.roomNumber} • Bed {tenant.bedNumber}</span>
+                          <p className="font-medium text-rose-200">{tenant.tenantName}</p>
+                          <p className="text-rose-400">House {tenant.house} • Room {tenant.room} • Bed {tenant.bed}</p>
                           {tenant.nextDueDate && (
-                            <span className="text-xs text-rose-500 mt-1">Due: {tenant.nextDueDate}</span>
+                            <p className="text-xs text-rose-500 mt-1">Due: {tenant.nextDueDate}</p>
                           )}
                         </div>
                         <div className="text-right">
-                          <span className="font-medium text-rose-900">₱{tenant.remainingBalance.toLocaleString()}</span>
+                          <span className="font-medium text-rose-200">₱{tenant.remainingBalance.toLocaleString()}</span>
                         </div>
                       </div>
                     ))}
