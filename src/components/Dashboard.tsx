@@ -383,6 +383,75 @@ export default function Dashboard() {
                 {overdueCount > 0 && (
                   <span className="text-rose-400">{overdueCount} overdue</span>
                 )}
+              </div>
+            </div>
+            <p className="mb-3 sm:mb-4 text-xs sm:text-sm text-slate-500">
+              {roomBeds.length} bed{roomBeds.length !== 1 ? "s" : ""}
+            </p>
+            
+            {/* Tenant Details */}
+            <div className="space-y-2 sm:space-y-3">
+              {roomBeds.map(({ bed, bedLetter, metrics }) => (
+                <div
+                  key={`${key}-${bedLetter}`}
+                  className="group w-full rounded-xl border border-slate-700/50 bg-slate-900/50 p-3 sm:p-4 text-left transition-all duration-200 hover:border-slate-600/70 hover:bg-slate-800/60 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-slate-500 active:bg-slate-800/80 touch-manipulation"
+                  onClick={() =>
+                    setModalBed(
+                      bed ?? {
+                        house,
+                        roomNumber: room,
+                        bedNumber: bedLetter,
+                        status: "available",
+                      }
+                    )
+                  }
+                  onTouchStart={(e) => {
+                    // Add haptic feedback on touch devices
+                    if ('vibrate' in navigator) {
+                      navigator.vibrate(50);
+                    }
+                  }}
+                  aria-label={`Bed ${bedLetter} - ${bed?.tenantName ? `Occupied by ${bed.tenantName}` : 'Available'}${metrics ? ` - Status: ${STATUS_LABELS[metrics.status]}` : ''}`}
+                  tabIndex={0}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {bed?.tenantName ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018-4 4 4 0 00-8 4zM4 12a8 8 0 018 8 8 8 0 01-8-8z" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l2 2m6-2l2 2m0 0l-2-2m-8 8V5a2 2 0 012-2h8a2 2 0 012 2v14l-3-3m0 0l3 3m-3-3h6" />
+                        )}
+                      </svg>
+                      <div>
+                        <p className="text-sm sm:font-medium text-slate-200 group-hover:text-slate-100 transition-colors">
+                          {bed?.tenantName || "Available"}
+                        </p>
+                        <p className="text-xs sm:text-sm text-slate-400">
+                          House {house} • Room {room} • Bed {bedLetter}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`rounded-lg border px-2 py-1 sm:px-2.5 sm:py-0.5 text-xs font-medium transition-all duration-300 animate-fade-in ${
+                          bed?.tenantName
+                            ? STATUS_STYLES[metrics?.status ?? "paid"]
+                            : STATUS_STYLES.available
+                        }`}
+                      >
+                        {bed?.tenantName
+                          ? STATUS_LABELS[metrics?.status ?? "paid"]
+                          : "Available"}
+                      </span>
+                      {metrics?.nextDueDate && (
+                        <p className="text-slate-500 text-xs mt-1">
+                          📅 Due: {metrics.nextDueDate}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
