@@ -133,6 +133,10 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "gcash">("cash");
   const [saving, setSaving] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<number | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editMethod, setEditMethod] = useState<"cash" | "gcash">("cash");
 
   const rentLocked = (tenant.monthlyRent ?? 0) > 0;
   const cfg = STATUS_CONFIG[tenant.status];
@@ -157,13 +161,75 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
     } finally { setSaving(false); }
   };
 
+  const startEditPayment = (index: number, payment: PaymentRecord) => {
+    setEditingPayment(index);
+    setEditAmount(String(payment.amount));
+    setEditDate(payment.date);
+    setEditMethod(payment.method || "cash");
+  };
+
+  const cancelEditPayment = () => {
+    setEditingPayment(null);
+    setEditAmount("");
+    setEditDate("");
+    setEditMethod("cash");
+  };
+
+  const saveEditPayment = async (index: number) => {
+    const amount = parseFloat(editAmount) || 0;
+    if (amount <= 0) return;
+    setSaving(true);
+    try {
+      // Update payment in tenant's payment array
+      const updatedPayments = [...tenant.payments];
+      updatedPayments[index] = {
+        ...updatedPayments[index],
+        amount,
+        date: editDate,
+        method: editMethod
+      };
+      
+      // Update bed with modified payments
+      const updatedBed = {
+        ...bed,
+        tenant: {
+          ...tenant,
+          payments: updatedPayments
+        }
+      };
+      
+      // Save to Firebase/localStorage
+      const { getFirebaseStatus } = await import("@/lib/firebase");
+      const firebaseStatus = getFirebaseStatus();
+      
+      if (firebaseStatus.available && firebaseStatus.db) {
+        const { doc, updateDoc } = await import("firebase/firestore");
+        const { db } = await import("@/lib/firebase");
+        const bedRef = doc(db, "beds", bed.id);
+        await updateDoc(bedRef, updatedBed);
+      } else {
+        // Fallback to localStorage
+        const beds = JSON.parse(localStorage.getItem("riverobh-beds") || "[]");
+        const bedIndex = beds.findIndex((b: any) => b.id === bed.id);
+        if (bedIndex !== -1) {
+          beds[bedIndex] = updatedBed;
+          localStorage.setItem("riverobh-beds", JSON.stringify(beds));
+        }
+      }
+      
+      cancelEditPayment();
+    } finally { 
+      setSaving(false); 
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="relative z-10 w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl shadow-black/60 animate-fade-in-scale"
+        className="relative z-10 w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl shadow-black/60 animate-fade-in-scale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -314,19 +380,79 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
                   .sort((a, b) => b.date.localeCompare(a.date))
                   .map((p, i) => (
                     <div key={i} className="flex items-center justify-between px-4 py-3">
-                      <div>
-                        <p className="text-sm text-slate-200">{p.date}</p>
-                        {p.method && (
-                          <span className={`text-xs capitalize px-1.5 py-0.5 rounded-md mt-0.5 inline-block ${
-                            p.method === "gcash"
-                              ? "bg-blue-500/10 text-blue-400"
-                              : "bg-slate-700/60 text-slate-400"
-                          }`}>
-                            {p.method}
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-semibold text-emerald-400 tabular-nums">₱{p.amount.toLocaleString()}</span>
+                      {editingPayment === i ? (
+                        <div className="flex-1 flex items-center gap-2">
+                          <input
+                            type="date"
+                            value={editDate}
+                            onChange={(e) => setEditDate(e.target.value)}
+                            className="px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-slate-200"
+                          />
+                          <input
+                            type="number"
+                            value={editAmount}
+                            onChange={(e) => setEditAmount(e.target.value)}
+                            placeholder="Amount"
+                            className="px-2 py-1 text-sm bg-slate-700 border border-slate-600 rounded text-slate-200 w-24"
+                          />
+                          <div className="flex rounded-xl border border-slate-700 bg-slate-800 overflow-hidden">
+                            {(["cash", "gcash"] as const).map((method) => (
+                              <button
+                                key={method}
+                                type="button"
+                                onClick={() => setEditMethod(method)}
+                                className={`px-3 py-1 text-xs font-medium transition ${
+                                  editMethod === method
+                                    ? "bg-slate-600 text-slate-100"
+                                    : "text-slate-400 hover:text-slate-200"
+                                }`}
+                              >
+                                {method === "cash" ? "Cash" : "GCash"}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => saveEditPayment(i)}
+                            disabled={saving}
+                            className="px-2 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded disabled:opacity-50"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={cancelEditPayment}
+                            className="px-2 py-1 text-xs bg-slate-600 hover:bg-slate-700 text-white rounded"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <p className="text-sm text-slate-200">{p.date}</p>
+                            {p.method && (
+                              <span className={`text-xs capitalize px-1.5 py-0.5 rounded-md mt-0.5 inline-block ${
+                                p.method === "gcash"
+                                  ? "bg-blue-500/10 text-blue-400"
+                                  : "bg-slate-700/60 text-slate-400"
+                              }`}>
+                                {p.method}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-emerald-400 tabular-nums">₱{p.amount.toLocaleString()}</span>
+                            <button
+                              onClick={() => startEditPayment(i, p)}
+                              className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700 rounded"
+                              title="Edit payment"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 <div className="flex items-center justify-between px-4 py-3 bg-slate-700/20">
