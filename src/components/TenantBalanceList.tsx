@@ -199,10 +199,9 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
       };
       
       // Save to Firebase/localStorage
-      const { getFirebaseStatus } = await import("@/lib/firebase");
       const firebaseStatus = getFirebaseStatus();
       
-      if (firebaseStatus.available && firebaseStatus.db) {
+      if (!firebaseStatus.isOffline && firebaseStatus.db) {
         const { doc, updateDoc } = await import("firebase/firestore");
         const { db } = await import("@/lib/firebase");
         const bedRef = doc(db, "beds", bed.id);
