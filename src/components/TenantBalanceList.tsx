@@ -138,6 +138,11 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
   const [editDate, setEditDate] = useState("");
   const [editMethod, setEditMethod] = useState<"cash" | "gcash">("cash");
 
+  // Update modal state when parent tenant data changes
+  useEffect(() => {
+    setMonthlyRent(String(tenant.monthlyRent || ""));
+  }, [tenant.monthlyRent]);
+
   const rentLocked = (tenant.monthlyRent ?? 0) > 0;
   const cfg = STATUS_CONFIG[tenant.status];
 
@@ -236,17 +241,17 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center">
               <span className="text-sm font-bold text-indigo-400">
-                {tenant.tenantName.charAt(0).toUpperCase()}
+                {tenant?.tenantName?.charAt(0).toUpperCase() || "T"}
               </span>
             </div>
             <div>
-              <h3 className="font-semibold text-slate-100 text-sm">{tenant.tenantName}</h3>
-              <p className="text-xs text-slate-500">{tenant.roomNumber} · Bed {tenant.bedNumber}</p>
+              <h3 className="font-semibold text-slate-100 text-sm">{tenant?.tenantName || "Unknown Tenant"}</h3>
+              <p className="text-xs text-slate-500">{tenant?.roomNumber || "Unknown"} · Bed {tenant?.bedNumber || "Unknown"}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cfg.badge}`}>
-              {cfg.label}
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cfg?.badge || "bg-slate-500/15 text-slate-500"}`}>
+              {cfg?.label || "Unknown"}
             </span>
             <button
               type="button"
@@ -265,11 +270,11 @@ function TenantEditModal({ tenant, bed, onClose, onSetRent, onAddPayment, canEdi
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-slate-800/60 border border-slate-700/50 p-3 text-center">
               <p className="text-xs text-slate-500 mb-1">Monthly Rent</p>
-              <p className="text-base font-bold text-slate-100">₱{tenant.monthlyRent.toLocaleString()}</p>
+              <p className="text-base font-bold text-slate-100">₱{(tenant.monthlyRent || 0).toLocaleString()}</p>
             </div>
             <div className="rounded-xl bg-slate-800/60 border border-slate-700/50 p-3 text-center">
               <p className="text-xs text-slate-500 mb-1">Total Paid</p>
-              <p className="text-base font-bold text-emerald-400">₱{tenant.amountPaid.toLocaleString()}</p>
+              <p className="text-base font-bold text-emerald-400">₱{(tenant.amountPaid || 0).toLocaleString()}</p>
             </div>
             <div className={`rounded-xl border p-3 text-center ${tenant.remainingBalance > 0 ? "bg-rose-500/8 border-rose-500/20" : "bg-slate-800/60 border-slate-700/50"}`}>
               <p className="text-xs text-slate-500 mb-1">Balance</p>
@@ -1081,13 +1086,13 @@ export default function TenantBalanceList({ canEdit = true, searchQuery: externa
       )}
 
       {editingTenant && editingBed && (
-        <TenantEditModal
-          tenant={editingTenant}
-          bed={editingBed}
-          onClose={() => setEditingTenant(null)}
-          onSetRent={handleSetRent}
-          onAddPayment={handleAddPayment}
-          canEdit={canEdit}
+        <TenantEditModal 
+          tenant={editingTenant} 
+          bed={editingBed} 
+          onClose={() => setEditingTenant(null)} 
+          onSetRent={handleSetRent} 
+          onAddPayment={handleAddPayment} 
+          canEdit={canEdit} 
         />
       )}
     </div>
