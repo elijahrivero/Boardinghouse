@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "RiveroBH",
-  description: "Bed space availability and tenant balance management",
+  description: "Bed space availability and tenant balance management.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
